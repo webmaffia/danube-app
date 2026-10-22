@@ -1,75 +1,60 @@
-# HoABL AI Land Advisor (prototype)
+# Danube Property Advisor (prototype)
 
-The build brief is in [BUILD.md](BUILD.md).
+A mobile web app where a virtual Property Advisor profiles a buyer, recommends Danube projects in Dubai, answers unit-level questions, takes a sandbox booking token, runs a simulated KYC and walks through Danube's 1% payment plan. Next.js App Router, Tailwind, Zustand, OpenAI for the agent, HeyGen LiveAvatar for the video avatar.
 
-## Run
+## Where the data comes from
 
-```bash
-cp .env.example .env.local   # add OPENAI_API_KEY
+**Taken from danubeproperties.com**: all 40 projects in the site menu, each from its own project page (fetched October 2026), plus the homepage and the 1% payment plan page.
+
+- **Every project is in the app.** 13 can still be booked: Bayz 102, Shahrukhz Residences, Greenz, Bayz 101, Diamondz, Aspirz, Fashionz, Serenz, the Shahrukhz office tower, Sparklz, Timez, Oceanz 3 and the ready-to-move Eleganz. The other 27 are completed or tagged SOLD OUT on their pages: they show their real facts and no bookable units.
+- Per project: area, status, handover, unit count, floors, furnished or not, amenities, nearby places with travel times, the payment plan as the page labels it, starting prices and any per-type prices, and a photo from Danube's site (host these yourself before launch).
+- Bayz 102, Shahrukhz Residences and Greenz are hand-built in `lib/inventory.ts` with extra detail. The other 37 are in `lib/projects-data.ts`.
+- The 1% plan: around 20% down, 1% of the price a month, the balance when the building is ready. Greenz's FAQ gives 20% down, 40 monthly instalments and 40% on completion.
+- Company facts, the logo, favicon and colours.
+
+**Placeholders, labelled "Sample pricing" on screen** (the pages don't publish them):
+
+- Unit sizes (only Greenz publishes them), which of the 24 sample units per bookable project are available, and their floors and views.
+- Prices for unit types a page doesn't price, derived at the starting price's rate.
+- The AED 20,000 token and the booking and cancellation terms.
+- The monthly instalment counts, except Greenz: they are the months to the stated handover, because the pages list a "30/70" plan without terms. The app says they are indicative.
+- RERA numbers.
+
+**Conflicts on Danube's own pages** are kept as notes the advisor reads out, for the sales team to settle. Examples: Bayz 102 handover (June 2029 vs December 2028) and starting price, Greenz plan (30/60 vs 20/40/40) and price, Aspirz and Timez starting prices, and several JVC and JVT projects that give two handover dates.
+
+## Run it
+
+```
 pnpm install
-pnpm dev --port 3100         # open /agent
-pnpm test                    # tool, guard and agent-loop tests, no API key needed
+cp .env.example .env   # OPENAI_API_KEY, HEYGEN_API_KEY, ...
+pnpm dev
+pnpm test
 ```
 
-## Where things are
+`NEXT_PUBLIC_AVATAR_MODE=svg` runs without the live avatar.
 
-- `lib/inventory.ts`: three projects and the seeded plot generator. Isle of Anjarle is real and comes from `assets/Anjarle`. Mopa and Samruddhi are illustrative.
-- `lib/knowledge.ts`: per-project facts and the objection playbook. Content the source documents don't cover, such as booking and cancellation terms, is written for this POC.
-- `lib/agent/tools.ts`: the six tools (strict schemas and handlers).
-- `lib/agent/guard.ts`: the return-language and numeric-provenance checks.
-- `lib/agent/run.ts`: one turn, which covers the tool loop (up to 4 rounds), the guard, one regeneration and the fallback.
-- `app/api/agent/route.ts`: streams NDJSON events: `tool_start`, `tool_result`, `show`, `guard`, `reply`.
-- `lib/store.ts`: the client session (Zustand, mirrored to sessionStorage). The server is stateless.
-- `lib/agent/say-stream.ts`: releases the spoken reply one sentence at a time. A sentence with a digit waits for its provenance check.
-- `lib/avatar/controller.ts`: covers the LiveAvatar session lifecycle (warm during OTP, idle, tab-hide and mode-switch close, and a seamless handover before the sandbox's 60 s cap), auto-reconnect, filler speech and barge-in. If the avatar can't load or keeps dropping, the conversation switches to chat, with a note and a way back.
-- `app/api/avatar/token/route.ts`: mints LiveAvatar session tokens. The API key stays on the server.
-- `/debug`: the plain Day 1 chat page, for tuning the agent without the avatar.
-- `app/(journey)/`: every screen the agent can open. They share one layout (`components/journey/Shell.tsx`), so the avatar, the conversation and the composer stay mounted while screens change. On a screen, the avatar shrinks to a picture-in-picture tile (the same video element) and a dock shows the advisor's latest line.
-  - `/plots`: recommendations
-  - `/plots/[id]`: project detail
-  - `/plots/[id]/map`: plot map
-  - `/money/calculator`, `/money/loan`
-  - `/booking`, `/booking/kyc`
-- `lib/journey.ts`: maps the agent's `show` views to routes and back. The screen the customer is on goes back to the agent as context on every turn.
-- `/console`: the presenter view. Open it in a second tab of the same browser and it follows the session live over a BroadcastChannel. It shows the funnel, profile, booking, tool trace, transcript, guardrail hits and avatar video minutes. The landing page links to it.
+## Layout
 
-## Demo rules
+- `lib/inventory.ts` and `lib/projects-data.ts`: all 40 projects, and a seeded unit generator for the 13 that can be booked. Towers lay units out floor by floor; Greenz is a community, so its rows are streets. Unit numbers read `BY-1004` (floor 10, flat 04).
+- `lib/knowledge.ts`: policies, facts and the objection playbook the agent retrieves. Projects without a hand-written entry get one generated from their page data.
+- `lib/agent/`: system prompt, eight strict tools, output guardrails (figures must come from a tool result; no promised returns). Bayz 102 is the featured project and always leads (`FEATURED_PROJECT` in `lib/agent/tools.ts`).
+- `lib/journey.ts`: view-to-route mapping, AED formatting, the post-KYC payment schedule.
+- `app/`: landing, registration (mock OTP), advisor, recommendations (with the full project list), project, unit map, payment-plan calculator, booking, KYC, payment schedule, presenter console.
 
-- **Intro:** after registration, the Land Advisor introduces HoABL and itself (`intro()` in `lib/onboarding.ts`), then asks the three preset questions.
-- **Featured project:** Isle of Anjarle (`FEATURED_PROJECT` in `lib/agent/tools.ts`) is always the top recommendation, whatever the answers. If it's over the customer's budget, the Land Advisor says so and offers the instalment plan and financing.
-- **Walkthrough:** a project's films play automatically and muted at the top of its page. The Land Advisor narrates each one from the corner tile, and the voice sets the pace: each film starts when its narration starts, holds on its last frame if the narration runs longer, and moves on about 4 s after the narration ends (`components/journey/FilmStrip.tsx`, using `avatar.narrate()`, which matches the avatar's speech events by id). There's no Skip and no on-screen transcript.
+## Journey
 
-- **Voice follows the screen:** when the customer opens a screen themselves, the Land Advisor stops talking about the last screen, drops any reply still arriving about it, and says a short scripted line about the new one (`lib/avatar/screen-lines.ts`, built from app data). When the advisor opened the screen, or a tap there asked it something, its own reply covers it. Tapping a plot on the map gets its facts read out. The property page's films stop narrating as soon as the customer leaves.
-- **Back** always returns to the screen the customer was actually on before, whether they got there by a tap, a chip or the Land Advisor opening it. The shell keeps a trail of visited screens in sessionStorage, so this survives a refresh and stays in step with the phone's own back. With no earlier screen, as when a screen is opened by its link, Back goes up a level: map → project → recommendations, and loan → KYC → booking → plot map.
-- **No Land Advisor strip** on the recommendations, property, plot map, booking, KYC and loan screens; the chips and input stay.
+1. Register (mock OTP). The advisor welcomes you and asks three scripted questions.
+2. It recommends projects and opens the screen itself.
+3. Ask about units ("the highest floor", "three next to each other"), compare, raise a price objection. Ask about a sold-out project and it says so and offers one you can book.
+4. Open the payment-plan calculator, book a unit and pay the sandbox token.
+5. Complete KYC (Emirates ID or passport, UAE PASS consent, selfie: all simulated; only a masked document number is kept).
+6. Work through the payment schedule: balance of the down payment, sales and purchase agreement, Oqood registration, first 1% instalment.
 
-## Demo script (BUILD.md §10)
+OTP, payment, KYC, signing and registration are simulated and labelled so. `/console` mirrors the live session.
 
-1. Register, then get greeted by name.
-2. Say "investment, around 40 to 50 lakh, drive from Mumbai". The Recommendations screen opens on its own.
-3. Ask "which has better connectivity?", then "the 2,000 sq ft options at Anjarle", then "which is closest to the entrance?".
-4. Say "this feels expensive". The advisor offers a smaller plot, highlights it on the map, and suggests the instalment plan or financing.
-5. Ask for the EMI. The calculator opens.
-6. Say "I want to book this". The Booking screen opens. Pay in the sandbox.
-7. Say yes to KYC, then check loan eligibility and get the in-principle sanction.
-8. Open `/console`. The session sits at "Loan processing".
+## Known gaps
 
-Payment, KYC and the loan tell the advisor what happened through `[App event]` turns, which show in the transcript as system lines. The advisor responds and guides the next step. No Aadhaar number is ever asked for, and only a masked PAN is stored.
-
-## Avatar (LiveAvatar)
-
-HeyGen's streaming-avatar SDK is deprecated, and its API now returns 404. The avatar runs on HeyGen's successor, LiveAvatar (`@heygen/liveavatar-web-sdk`).
-
-- **Key:** `HEYGEN_API_KEY` must be a LiveAvatar key from app.liveavatar.com/developers. A HeyGen video key won't work.
-- **Sessions:** the app uses FULL mode with no context attached, which LiveAvatar calls "restricted mode". Its LLM never replies. It does voice activity detection and transcription, and speaks what we send with `repeat()`, the equivalent of BUILD.md's REPEAT. Our agent and guardrails produce every word.
-- **Sandbox:** `HEYGEN_SANDBOX=true` gives free sessions with the "Wayne" avatar, capped at 60 s. The app reconnects on demand when a session ends. Set it to `false` once the account has credits (2 credits a minute). The configured avatar is Anthony, in portrait framing.
-- **Chat only:** set `NEXT_PUBLIC_AVATAR_MODE` to anything other than `heygen` to ship without the live avatar.
-- **Modes:** Avatar is full screen, live-stream style. Chat is the transcript. Minimising either one shows the app screens, with the avatar as a tile in the corner or the advisor's latest line docked above the input.
-
-## Where the demo departs from the source documents
-
-- The payment terms follow BUILD.md: a ₹45,000 token, then 20/40/40. Anjarle's real terms are a ₹99,000 EOI and a milestone schedule.
-- Prices are set so every budget bracket in the welcome question (< ₹20L, ₹20–35L, ₹35–50L, > ₹50L) has at least two available plots in every project. Anjarle keeps its four real configurations at their real list prices and adds two demo-only sizes at the same rate: 600 sq ft (about ₹17.7L) and 1,000 sq ft (about ₹29.5L). Its 1,367 and 1,506 sq ft configurations are sold out in reality; the demo keeps some available. A test checks that every bracket stays covered.
-- Booking and cancellation terms are written for the POC, as are all facts about Mopa and Samruddhi.
-
-`assets/` (1.6 GB) is git- and Vercel-ignored. Web-sized images are in `public/projects/anjarle/`.
+- `BUILD.md` is the original land-sales brief and no longer describes this app.
+- There is no investment-growth chart: it showed invented percentages, so it was removed. Add one only with figures Danube can source.
+- The agent's guardrail treats any figure it didn't get from a tool result as a violation, so new copy that quotes numbers should live in `lib/knowledge.ts` or a tool result.
+- Some projects tagged SOLD OUT on the listing still show FAQ starting prices (Breez, Oasiz, Oasiz 2, Viewz). If Danube still sells units there, remove `sold: true` in `lib/projects-data.ts` and the app generates sample units for them.

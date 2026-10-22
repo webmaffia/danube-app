@@ -7,41 +7,42 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { nextPlanStep, useSession, type Booking, type PlanProgress } from "@/lib/store";
-import { findPlot } from "@/lib/inventory";
+import { findUnit, getProject } from "@/lib/inventory";
 import { useAvatar } from "@/lib/avatar/controller";
-import { dateIn, inr, lakh, sqft } from "@/lib/journey";
+import { dateIn, aed, aedShort, scheduleSteps, sqft } from "@/lib/journey";
+import { TOKEN_AMOUNT } from "@/lib/knowledge";
 import { Button, Card, Disclosure, SandboxTag, ScreenTitle, Section, StickyBar } from "@/components/journey/ui";
 
 const METHODS = [
-  { id: "UPI", label: "UPI", hint: "Any UPI app" },
-  { id: "Card", label: "Debit or credit card", hint: "Visa, Mastercard, RuPay" },
-  { id: "Net banking", label: "Net banking", hint: "All major banks" },
+  { id: "Card", label: "Debit or credit card", hint: "Visa, Mastercard" },
+  { id: "Apple Pay", label: "Apple Pay", hint: "Pay with your device" },
+  { id: "Bank transfer", label: "Bank transfer", hint: "From any UAE or international bank" },
 ];
 
-const STAGES = ["Connecting to your bank…", "Authorising ₹45,000…", "Confirming your plot…", "Payment received"];
+const STAGES = ["Connecting to your bank…", `Authorising ${aed(TOKEN_AMOUNT)}…`, "Confirming your unit…", "Payment received"];
 
 export default function BookingPage() {
   const router = useRouter();
-  const { booking, selectedPlot, send, markPaid, sendEvent, overrides, kyc, plan } = useSession();
+  const { booking, selectedUnit, send, markPaid, sendEvent, overrides, kyc, plan } = useSession();
   const dismissed = useAvatar((a) => a.dismissed);
-  const [method, setMethod] = useState("UPI");
+  const [method, setMethod] = useState("Card");
   const [stage, setStage] = useState<number | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
   if (!booking) {
-    const plot = selectedPlot ? findPlot(selectedPlot, overrides) : undefined;
+    const unit = selectedUnit ? findUnit(selectedUnit, overrides) : undefined;
     return (
       <div className="flex min-h-full flex-col">
-        <ScreenTitle eyebrow="Booking" title="No plot on hold yet" sub="Pick a plot on the map, or ask the advisor to hold one for you." />
+        <ScreenTitle eyebrow="Booking" title="No unit on hold yet" sub="Pick a unit on the map, or ask the advisor to hold one for you." />
         <StickyBar>
-          {plot && plot.status === "available" ? (
-            <Button onClick={() => (dismissed ? void useSession.getState().bookPlot(plot.id) : void send(`I want to book plot ${plot.plotNo}.`))}>
-              {dismissed ? `Hold ${plot.plotNo}` : `Ask the advisor to hold ${plot.plotNo}`}
+          {unit && unit.status === "available" ? (
+            <Button onClick={() => (dismissed ? void useSession.getState().bookUnit(unit.id) : void send(`I want to book unit ${unit.unitNo}.`))}>
+              {dismissed ? `Hold ${unit.unitNo}` : `Ask the advisor to hold ${unit.unitNo}`}
             </Button>
           ) : (
-            <Button onClick={() => router.push("/plots/anjarle/map")}>Open the plot map</Button>
+            <Button onClick={() => router.push("/units/gemz/map")}>Open the unit map</Button>
           )}
         </StickyBar>
       </div>
@@ -58,7 +59,7 @@ export default function BookingPage() {
         markPaid(method);
         void sendEvent(
           `Token paid · ${booking.booking_id}`,
-          `The customer paid the ₹45,000 token by ${method} for plot ${booking.plot_no} at ${booking.project_name} (booking ${booking.booking_id}). The plot is now held for them.`,
+          `The customer paid the ${aed(booking.token_amount)} token by ${method} for unit ${booking.unit_no} at ${booking.project_name} (booking ${booking.booking_id}). The unit is now held for them.`,
           "token_paid",
         );
       }, 4000),
@@ -69,27 +70,27 @@ export default function BookingPage() {
 
   return (
     <div className="flex min-h-full flex-col">
-      <ScreenTitle eyebrow="Booking" title="Confirm your plot" right={<SandboxTag />} />
+      <ScreenTitle eyebrow="Booking" title="Confirm your unit" right={<SandboxTag />} />
 
       <Card className="mx-4 mt-4 px-4 py-3.5">
         <div className="flex items-start justify-between">
           <div>
-            <div className="font-display text-[22px] font-semibold tracking-tight">{booking.plot_no}</div>
+            <div className="font-display text-[22px] font-semibold tracking-tight">{booking.unit_no}</div>
             <div className="text-[12.5px] text-ink-soft">
               {booking.project_name} · {sqft(booking.size_sqft)}
             </div>
           </div>
           <div className="text-right">
-            <div className="font-display text-[19px] font-semibold">{lakh(booking.price)}</div>
-            <div className="text-[11.5px] text-ink-soft">all-inclusive</div>
+            <div className="font-display text-[19px] font-semibold">{aedShort(booking.price)}</div>
+            <div className="text-[11.5px] text-ink-soft">excl. government fees</div>
           </div>
         </div>
         <div className="mt-3 flex items-center justify-between rounded-xl bg-gold-soft px-3 py-2.5">
           <span className="text-[13px] font-semibold">Pay now to hold it</span>
-          <span className="font-display text-[20px] font-semibold">{inr(booking.token_amount)}</span>
+          <span className="font-display text-[20px] font-semibold">{aed(booking.token_amount)}</span>
         </div>
         <p className="mt-2 text-[11.5px] text-ink-soft">
-          Booking {booking.booking_id}. The token is fully refundable for 15 days. The balance follows the instalment plan.
+          Booking {booking.booking_id}. The token is fully refundable for 15 days. The rest follows Danube's 1% payment plan.
         </p>
       </Card>
 
@@ -110,7 +111,7 @@ export default function BookingPage() {
         </div>
       </Section>
 
-      <Disclosure>Sandbox: this is a simulated payment. No card, UPI or bank details are collected, and no money is charged.</Disclosure>
+      <Disclosure>Sandbox: this is a simulated payment. No card or bank details are collected, and no money is charged.</Disclosure>
 
       <StickyBar>
         {paying ? (
@@ -123,7 +124,7 @@ export default function BookingPage() {
           </Card>
         ) : (
           <Button variant="gold" onClick={pay}>
-            Pay {inr(booking.token_amount)} · sandbox
+            Pay {aed(booking.token_amount)} · sandbox
           </Button>
         )}
       </StickyBar>
@@ -135,20 +136,14 @@ function Confirmation({ booking, kycDone, plan, onKyc, onPlan }: { booking: Book
   // markPaid always stamps paidAt before this screen shows.
   const paidAt = booking.paidAt ?? 0;
   const steps: { date: string; title: string; detail: string; done?: boolean; action?: boolean; planAction?: boolean }[] = [
-    { date: dateIn(0, paidAt), title: "Token paid", detail: `${inr(booking.token_amount)} by ${booking.method}`, done: true },
+    { date: dateIn(0, paidAt), title: "Token paid", detail: `${aed(booking.token_amount)} by ${booking.method}`, done: true },
     kycDone
-      ? { date: dateIn(0, paidAt), title: "KYC verified", detail: "PAN, Aadhaar e-KYC and liveness", done: true }
-      : { date: dateIn(0, paidAt), title: "Complete KYC", detail: "PAN, Aadhaar consent and a quick selfie", action: true },
+      ? { date: dateIn(0, paidAt), title: "KYC verified", detail: "Emirates ID or passport, address and liveness", done: true }
+      : { date: dateIn(0, paidAt), title: "Complete KYC", detail: "Emirates ID or passport and a quick selfie", action: true },
   ];
   // The steps after KYC follow the payment plan; only the next one is actionable.
   const next = nextPlanStep(plan);
-  const later = [
-    { key: "i20", date: dateIn(30, paidAt), title: "20% instalment", detail: inr(booking.price * 0.2 - booking.token_amount) },
-    { key: "allotment", date: dateIn(37, paidAt), title: "Allotment letter", detail: "Within 7 days of the 20% instalment" },
-    { key: "i40", date: dateIn(90, paidAt), title: "40% instalment", detail: inr(booking.price * 0.4) },
-    { key: "registration", date: dateIn(180, paidAt), title: "Registration", detail: `Final 40% · ${inr(booking.price * 0.4)}` },
-  ] as const;
-  for (const l of later) {
+  for (const l of scheduleSteps(booking.price, booking.token_amount, paidAt, getProject(booking.project_id)?.plan.months)) {
     steps.push({ date: l.date, title: l.title, detail: l.detail, done: Boolean(plan[l.key]), planAction: kycDone && next === l.key });
   }
 
@@ -160,7 +155,7 @@ function Confirmation({ booking, kycDone, plan, onKyc, onPlan }: { booking: Book
             <path d="M5 12.5l4.5 4.5L19 7.5" />
           </svg>
         </div>
-        <h1 className="mt-3 font-display text-[24px] font-semibold tracking-tight">{booking.plot_no} is held for you</h1>
+        <h1 className="mt-3 font-display text-[24px] font-semibold tracking-tight">{booking.unit_no} is held for you</h1>
         <p className="mt-1 text-[13.5px] text-ink-soft">
           {booking.project_name} · booking {booking.booking_id}
         </p>

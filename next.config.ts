@@ -2,9 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    // Stand-in thumbnails for the illustrative demo projects (mopa, nagpur),
-    // reused from HoABL's public project photography.
-    remotePatterns: [{ protocol: "https", hostname: "hoabl-bucket.s3.ap-south-1.amazonaws.com" }],
+    // Project photography is loaded straight from Danube's own site until the
+    // images are supplied and hosted with the app.
+    remotePatterns: [{ protocol: "https", hostname: "danubeproperties.com", pathname: "/wp-content/uploads/**" }],
   },
 };
 

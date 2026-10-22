@@ -1,17 +1,17 @@
 "use client";
 
 // The project films, inline at the top of the property page, narrated by the
-// Land Advisor. They play automatically, muted, one after another, and the
+// Property Advisor. They play automatically, muted, one after another, and the
 // avatar's voice drives the pace so words and pictures stay together:
 //
 //   1. cue    the film waits on its first frame while the narration is sent
-//   2. play   the film starts the moment the Land Advisor starts speaking
+//   2. play   the film starts the moment the Property Advisor starts speaking
 //   3. hold   if the film ends before the narration, it rests on its last frame
 //   4. next   once the narration ends, a few more seconds of footage, then the
 //             next film (straight away if this one has already ended)
 //
 // The films play full screen, inside the phone frame. Skip (or the last film
-// ending) leaves the hero with a "Take me on the tour" button, and the Land
+// ending) leaves the hero with a "Take me on the tour" button, and the Property
 // Advisor asks where the customer wants to start, with quick replies below.
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -225,7 +225,7 @@ export function FilmStrip({
           }}
           onEnded={() => {
             flags.current.ended = true;
-            // Hold on the last frame until the Land Advisor has finished.
+            // Hold on the last frame until the Property Advisor has finished.
             if (flags.current.narrated) scheduleNext();
           }}
           className="absolute inset-0 h-full w-full object-contain"

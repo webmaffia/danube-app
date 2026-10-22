@@ -3,7 +3,6 @@
 import { useEffect, useRef } from "react";
 import type { Turn } from "@/lib/store";
 import { VIEW_LABEL, type View } from "@/lib/journey";
-import { SITE_MAPS } from "@/lib/maps";
 import { CheckIcon, ScreenIcon } from "@/components/icons";
 
 const URL_RE = /(https?:\/\/\S+?)(?=[.,;:!?)]*(?:\s|$))/g;
@@ -19,16 +18,6 @@ function AgentText({ text }: { text: string }) {
         const isMap = /maps\.app\.goo\.gl|google\.[a-z.]+\/maps/.test(part);
         return (
           <span key={i} className="my-1.5 block overflow-hidden rounded-xl border border-line bg-card">
-            {isMap && (
-              <iframe
-                title="Site location map"
-                src={SITE_MAPS.anjarle.embed}
-                loading="lazy"
-                allowFullScreen
-                referrerPolicy="strict-origin-when-cross-origin"
-                className="block h-44 w-full border-0"
-              />
-            )}
             <a
               href={part}
               target="_blank"
@@ -60,13 +49,13 @@ export function Transcript({ turns, busy, error, showPills, onRetry }: { turns: 
   return (
     <div className="flex flex-col gap-2.5 px-4 pb-2 pt-4">
       <div className="mx-auto mb-1 max-w-[34ch] rounded-xl border border-line bg-card px-3 py-2 text-center text-[12px] leading-snug text-ink-soft">
-        You&rsquo;re talking to HoABL&rsquo;s virtual <b className="font-semibold text-ink">Land Advisor</b>. Prices and availability come from live inventory.
+        You&rsquo;re talking to Danube&rsquo;s virtual <b className="font-semibold text-ink">Property Advisor</b>. Prices and availability come from live inventory.
       </div>
 
       {turns.map((t, i) => {
         if (t.kind === "user")
           return (
-            <div key={i} className="ml-auto max-w-[82%] rounded-2xl rounded-br-md bg-gradient-to-br from-[#8b63ff] to-[#5a2fc2] px-3.5 py-2.5 text-[15px] leading-snug text-white">
+            <div key={i} className="ml-auto max-w-[82%] rounded-2xl rounded-br-md bg-gradient-to-br from-[#3b82c4] to-[#1f5a96] px-3.5 py-2.5 text-[15px] leading-snug text-white">
               {t.text}
               {t.interrupted && <span className="mt-1 block text-[11px] text-white/65">Interrupted</span>}
             </div>
@@ -121,7 +110,7 @@ export function Transcript({ turns, busy, error, showPills, onRetry }: { turns: 
       })}
 
       {waiting && (
-        <div className="mr-auto flex gap-1 rounded-2xl rounded-bl-md border border-line bg-card px-4 py-3.5" aria-label="Land Advisor is thinking">
+        <div className="mr-auto flex gap-1 rounded-2xl rounded-bl-md border border-line bg-card px-4 py-3.5" aria-label="Property Advisor is thinking">
           {[0, 1, 2].map((d) => (
             <span key={d} className="h-1.5 w-1.5 animate-bounce rounded-full bg-ink-soft" style={{ animationDelay: `${d * 120}ms` }} />
           ))}

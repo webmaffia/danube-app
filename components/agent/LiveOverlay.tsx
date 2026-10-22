@@ -62,10 +62,10 @@ export function LiveOverlay({
 
       {/* top bar */}
       <div className="absolute inset-x-0 top-0 z-20 flex items-center gap-2 px-3 pt-3 text-white">
-        <Logo className="h-9 shrink-0 [filter:drop-shadow(0_1px_3px_rgb(0_0_0/0.5))]" />
+        <Logo className="w-28 shrink-0 [filter:drop-shadow(0_1px_3px_rgb(0_0_0/0.5))]" />
         <div className="min-w-0 border-l border-white/30 pl-2 leading-tight">
-          <div className={`text-[13.5px] font-semibold ${SHADOW}`}>Land Advisor</div>
-          <div className={`text-[11px] text-white/80 ${SHADOW}`}>HoABL</div>
+          <div className={`text-[13.5px] font-semibold ${SHADOW}`}>Property Advisor</div>
+          <div className={`text-[11px] text-white/80 ${SHADOW}`}>Danube Properties</div>
         </div>
         <span className={`ml-1 rounded-md px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${badge.cls}`}>{badge.label}</span>
         {status === "live" && sandbox && (
@@ -127,7 +127,7 @@ export function LiveOverlay({
                   <p className={`text-[13.5px] leading-snug text-white ${SHADOW}`}>
                     <b className="mr-1 font-semibold">You</b>
                     <span className="text-white/85">{interim || "Listening…"}</span>
-                    <span className="ml-1 inline-block h-2 w-2 animate-pulse rounded-full bg-[#d6a24a]" />
+                    <span className="ml-1 inline-block h-2 w-2 animate-pulse rounded-full bg-[#BDA588]" />
                   </p>
                 </div>
               )}
@@ -182,14 +182,14 @@ function Comment({ turn, initial, showPills }: { turn: Turn; initial: string; sh
       <div className="flex items-start gap-2">
         <Avatar />
         <p className={`text-[14px] leading-snug text-white ${SHADOW}`}>
-          <b className="mr-1 font-semibold">Land Advisor</b>
+          <b className="mr-1 font-semibold">Property Advisor</b>
           <span className="text-white/95">{turn.text}</span>
         </p>
       </div>
     );
   if (turn.kind === "event")
     return (
-      <div className="ml-9 w-fit rounded-full bg-[#8b63ff]/80 px-2.5 py-1 text-[11.5px] font-semibold text-white backdrop-blur">✓ {turn.label}</div>
+      <div className="ml-9 w-fit rounded-full bg-[#3b82c4]/80 px-2.5 py-1 text-[11.5px] font-semibold text-white backdrop-blur">✓ {turn.label}</div>
     );
   if (turn.kind === "handoff")
     return (
@@ -222,7 +222,7 @@ function Avatar({ you = false, initial = "" }: { you?: boolean; initial?: string
   return you ? (
     <span className="mt-px flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/85 text-[12px] font-bold text-site">{initial}</span>
   ) : (
-    <span className="mt-px h-7 w-7 shrink-0 rounded-full bg-gradient-to-tr from-[#d6a24a] to-[#e0245e] p-[1.5px]">
+    <span className="mt-px h-7 w-7 shrink-0 rounded-full bg-gradient-to-tr from-[#BDA588] to-[#e0245e] p-[1.5px]">
       <span className="flex h-full w-full items-center justify-center rounded-full bg-site font-display text-[11px] font-bold text-white">H</span>
     </span>
   );

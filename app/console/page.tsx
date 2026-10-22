@@ -11,7 +11,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/journey/ui";
 import { INTENTS, type Intent } from "@/lib/agent/prompt";
 import { LIVE_CHANNEL, LIVE_KEY, type LiveSnapshot } from "@/lib/store";
-import { VIEW_LABEL, inr, lakh, type View } from "@/lib/journey";
+import { VIEW_LABEL, aed, aedShort, type View } from "@/lib/journey";
 
 const STAGE_LABEL: Record<Intent, string> = {
   visitor: "Visitor",
@@ -22,7 +22,6 @@ const STAGE_LABEL: Record<Intent, string> = {
   booking_initiated: "Booking initiated",
   token_paid: "Token paid",
   kyc_completed: "KYC completed",
-  loan_processing: "Loan processing",
   booking_completed: "Booking completed",
 };
 
@@ -123,7 +122,7 @@ export default function Console() {
               >
                 <span className="block text-[10px] font-medium opacity-70">{String(i + 1).padStart(2, "0")}</span>
                 {STAGE_LABEL[stage]}
-                {state === "now" && <span className="pulse-ring absolute inset-0 rounded-xl border-2 border-[#d6a24a]" />}
+                {state === "now" && <span className="pulse-ring absolute inset-0 rounded-xl border-2 border-[#BDA588]" />}
               </li>
             );
           })}
@@ -137,11 +136,11 @@ export default function Console() {
               {(
                 [
                   ["Purpose", snap.profile.purpose?.replace("_", " ")],
-                  ["Budget", snap.profile.budget_max ? lakh(snap.profile.budget_max, 0) : null],
+                  ["Budget", snap.profile.budget_max ? aedShort(snap.profile.budget_max, 0) : null],
                   ["Horizon", snap.profile.horizon_years ? `${snap.profile.horizon_years} years` : null],
                   ["Region", snap.profile.region],
                   ["Funding", snap.profile.funding],
-                  ["On screen", snap.screen ? VIEW_LABEL[snap.screen.view as View] : "Land Advisor"],
+                  ["On screen", snap.screen ? VIEW_LABEL[snap.screen.view as View] : "Property Advisor"],
                 ] as const
               ).map(([k, v]) => (
                 <div key={k} className="flex justify-between gap-2 border-b border-line/70 pb-1.5">
@@ -155,13 +154,11 @@ export default function Console() {
           <Panel title="Booking">
             {snap.booking ? (
               <div className="space-y-1 text-[13px]">
-                <Line k="Plot" v={`${snap.booking.plot_no} · ${snap.booking.project_name}`} />
-                <Line k="Price" v={lakh(snap.booking.price)} />
-                <Line k="Token" v={`${inr(snap.booking.token_amount)} · ${snap.booking.status === "paid" ? `paid by ${snap.booking.method}` : "awaiting payment"}`} />
+                <Line k="Unit" v={`${snap.booking.unit_no} · ${snap.booking.project_name}`} />
+                <Line k="Price" v={aedShort(snap.booking.price)} />
+                <Line k="Token" v={`${aed(snap.booking.token_amount)} · ${snap.booking.status === "paid" ? `paid by ${snap.booking.method}` : "awaiting payment"}`} />
                 <Line k="Booking ID" v={snap.booking.booking_id} />
-                <Line k="KYC" v={snap.kyc ? `Verified · PAN ${snap.kyc.panMasked}` : "Pending"} />
-                <Line k="Loan" v={snap.loan ? `${lakh(snap.loan.eligibleAmount)} at ${snap.loan.rate}% · in-principle${snap.loan.sanction ? ` · ${snap.loan.sanction.ref}` : ""}` : "Not started"} />
-              </div>
+                <Line k="KYC" v={snap.kyc ? `Verified · ID ${snap.kyc.idMasked}` : "Pending"} />              </div>
             ) : (
               <p className="text-[13px] text-ink-soft">No booking yet.</p>
             )}
@@ -232,7 +229,7 @@ export default function Console() {
                 if (t.kind === "agent")
                   return (
                     <p key={i} className="text-[13px]">
-                      <b>Land Advisor:</b> {t.text}
+                      <b>Property Advisor:</b> {t.text}
                     </p>
                   );
                 if (t.kind === "event")
@@ -255,7 +252,7 @@ export default function Console() {
                   );
                 return null;
               })}
-              {snap.busy && <p className="animate-pulse text-[12px] text-ink-soft">Land Advisor is working…</p>}
+              {snap.busy && <p className="animate-pulse text-[12px] text-ink-soft">Property Advisor is working…</p>}
             </div>
           </Panel>
         </div>
@@ -263,7 +260,7 @@ export default function Console() {
 
       <p className="mt-5 text-[11.5px] text-ink-soft">
         One session, mirrored from the customer&rsquo;s tab. Real: the agent&rsquo;s reasoning, tool calls, inventory, guardrails and the
-        avatar stream. Simulated: OTP, payment, KYC, loan and persistence.
+        avatar stream. Simulated: OTP, payment, KYC and persistence.
       </p>
     </main>
   );

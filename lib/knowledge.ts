@@ -1,13 +1,12 @@
 // Policies, facts and the objection playbook. Plain objects, no embeddings: at
 // three projects the whole corpus is small enough to look up by key.
 //
-// Anjarle facts are from the source documents in /assets/Anjarle (closing deck,
-// opportunity doc, Liases Foras white paper, calling scripts). Where the
-// documents are silent (booking and cancellation terms), the content is written
-// for this POC. The payment plan follows BUILD.md (₹45,000 token, then
-// 20/40/40) rather than Anjarle's real ₹99,000 EOI schedule.
+// Project facts come from the project pages on danubeproperties.com (fetched
+// October 2026) and the 1% payment plan page. The booking and cancellation
+// terms and the token amount are SAMPLE content written for this prototype:
+// confirm them with Danube before launch.
 
-import { getProject } from "@/lib/inventory";
+import { PROJECTS, getProject, type Project } from "@/lib/inventory";
 
 export const PROJECT_TOPICS = [
   "connectivity",
@@ -37,132 +36,199 @@ export type ProjectTopic = (typeof PROJECT_TOPICS)[number];
 export type ObjectionTopic = (typeof OBJECTION_TOPICS)[number];
 export type Topic = (typeof TOPICS)[number];
 
-export const TOKEN_AMOUNT = 45000;
-/** Indicative partner-bank land-loan rate, % a year. */
-export const INDICATIVE_RATE = 8.75;
+/** Booking token in AED. Sample amount. */
+export const TOKEN_AMOUNT = 20000;
+/** Down payment as a share of the price, as Danube's 1% plan page puts it ("around 20%"). */
+export const DOWN_PAYMENT_PCT = 20;
+/** Each monthly instalment, as a share of the price. */
+export const MONTHLY_PCT = 1;
+export const MIN_PLAN_MONTHS = 12;
+/** The longest monthly plan Danube advertises. */
+export const MAX_PLAN_MONTHS = 80;
 
-const PAYMENT_PLAN_COMMON =
-  "Booking starts with a ₹45,000 token. After that: 20% within 30 days of booking, 40% within 90 days, and the final 40% at registration. Plot-loan financing covers up to 50% of the plot value through partner banks at an indicative 8.75% a year, subject to eligibility and credit profile. Approval is in-principle until the bank sanctions it.";
+const PLAN_BASE =
+  "Danube's 1% payment plan: a down payment of around 20%, then 1% of the price every month while the building is built, and the balance when the building is ready. Danube says it was the first developer in the region to launch the 1% plan and has delivered over 15,000 apartments through it. Booking starts with a token of AED 20,000 (sample amount), which counts toward the down payment. Government fees such as the Dubai Land Department registration fee are separate, so confirm the exact amount with the sales team.";
 
-// Connectivity is generated from the inventory's distance ladder.
+const UNCONFIRMED_PLAN = (listed: string, months: number) =>
+  `${PLAN_BASE} This project's page lists a ${listed} payment plan and links the 1% plan without giving its terms, so the schedule shown in the app (20% down, then ${months} monthly instalments of 1%, then the balance on completion) is indicative. Confirm this project's exact terms with the sales team.`;
+
+// Connectivity is generated from the inventory's travel times.
 type ProjectKnowledge = Record<Exclude<ProjectTopic, "connectivity">, string[]>;
 
+const DEVELOPER_FACTS = [
+  "Danube Properties was founded in 1993 by Rizwan Sajan and describes itself as one of Dubai's top three developers. It has launched 32 projects, delivered 16 and has 16 under construction, covering over 25.5 million sq ft.",
+  "Danube is known for its 1% monthly payment plan, 40+ amenities in its buildings, fully furnished homes and freehold ownership.",
+  `This app lists all ${PROJECTS.length} Danube projects. Those with units to book are ${PROJECTS.filter((p) => p.availability === "available").map((p) => p.name.replace(" by Danube", "")).join(", ")}. The rest are completed or sold out.`,
+];
+
+const BOOKING_POLICY = [
+  "The AED 20,000 token holds the unit for 15 days and is fully refundable within that window, no questions asked. This is a sample term: confirm it with the sales team.",
+  "The sales and purchase agreement is issued after the down payment is complete, and the sale is then registered with the Dubai Land Department through Oqood. Cancellation terms after signing follow the signed agreement and Dubai's off-plan rules, which the sales team walks through.",
+];
+
+const TITLE_APPROVALS = [
+  "Dubai off-plan projects are registered with RERA, the Real Estate Regulatory Agency, and buyer payments are held in a project escrow account under Dubai law.",
+  "Ownership is freehold, open to all nationalities. The project's RERA registration number is shared in the sales and purchase agreement.",
+];
+
+const INVESTMENT_POINTS =
+  "Danube highlights freehold ownership, 100% tax-free income, long-term Golden Visa eligibility, a safe-city reputation and a fast-growing economy. Golden Visa eligibility is decided by the authorities, so confirm the current requirements with the sales team.";
+
 export const KNOWLEDGE: Record<string, ProjectKnowledge> = {
-  anjarle: {
+  bayz102: {
     location: [
-      "Anjarle sits at the mouth of the Jog River on the Konkan coast, in North Ratnagiri district. Nine untouched beaches line the coastline, three of them right at the site: Ridley's Beach (Anjarle Beach), Padale Beach and Savane Beach.",
-      "A UNESCO-recognised biodiversity hotspot with 300+ species of flora and fauna, and a nesting ground for Olive Ridley sea turtles, with humpback dolphin sightings off nearby Harnai.",
-      "By road from Mumbai: Mumbai – Panvel – Mangaon – Khed – Dapoli – Anjarle via NH 66, about 225 km, roughly 5.5 hours today. By road from Pune: via Tamhini Ghat – Mangaon – Khed – Dapoli – Anjarle, about 180 km, roughly 4.5 hours. By train: to Khed railway station, then about 40 km by road.",
-      "Site visits: customers are welcome to visit Isle of Anjarle in person; the sales team arranges the visit and meets you at the site, so confirm a date with them first. Google Maps location of the site: https://www.google.com/maps/place/The+House+of+Abhinandan+Lodha,+Anjarle/@17.8753533,73.079004,268m/data=!3m1!1e3!4m6!3m5!1s0x3be9b7bd8e6b21d9:0xa5ded793c143e4f1!8m2!3d17.8750993!4d73.0794711!16s%2Fg%2F11rp2blrl9 . When the customer asks about visiting or where the site is, include this exact link once in your reply; the app shows it as a tappable map card.",
-      "Nearby beaches: Karde, Murud, Ladghar (Red Sand Beach) and Tamastirth. Nearby heritage sites: the clifftop Kadyavarcha Ganpati temple, Keshavraj Temple, and Suvarnadurg Fort, a 17th-century Maratha sea fort reachable by boat from Harnai.",
+      "Bayz 102 is in Business Bay, Dubai, beside Business Bay Canal. The project page puts the canal 2 minutes away, the metro, Burj Khalifa and The Dubai Mall 3 minutes away, and City Walk and the Museum of the Future 5 minutes away.",
+      "Site visits: customers are welcome to visit. The sales team arranges the visit and meets you there, so confirm a date with them first.",
     ],
-    payment_plan: [
-      PAYMENT_PLAN_COMMON,
-      "Prices are all-inclusive list prices. CAM and corpus charges are billed separately.",
-      "The Closing Deck's own Expression-of-Interest figure for Isle of Anjarle is ₹99,000, fully refundable, ahead of allotment. This app's booking flow uses the standard ₹45,000 token shown above instead.",
-    ],
-    booking_policy: [
-      "The ₹45,000 token holds the plot for 15 days and is fully refundable within that window, no questions asked.",
-      "The allotment letter is issued within 7 days of the first 20% instalment. Cancelling after allotment but before the agreement for sale forfeits only the token. After the agreement for sale, 10% of the plot value is retained and the balance is refunded within 45 days, as set out in the MahaRERA-registered agreement.",
-      "Plots are allotted digitally and customers can track instalments and their portfolio in the HoABL app.",
-    ],
-    title_approvals: [
-      "Isle of Anjarle is registered with MahaRERA as The Ridley, P52800076609, and The Ridley Phase 2, PP1281012400069. Registrations can be checked at maharera.mahaonline.gov.in.",
-      "The development is phased, and each phase carries its own MahaRERA number: TomorrowView P52800050210; Tomorrowworld / Tomorrowland Phase IV P52800047713; The Ridley P52800076609; The Ridley Phase 2 PP1281012400069; Tomorrowland Phase 1 P52800031035, Phase 2 P52800031036, Phase 3 P52800033162. Which phase a specific plot falls under is confirmed at booking.",
-      "The development is CRZ-compliant. Under Coastal Regulation Zone rules nothing can be built within 200 m of the high tide line, and building between 200 and 500 m is regulated.",
-      "HoABL was established in 2020 and has no connection with Lodha or the Lodha Group.",
-    ],
+    payment_plan: [UNCONFIRMED_PLAN("30/70", getProject("bayz102")!.plan.months)],
+    booking_policy: BOOKING_POLICY,
+    title_approvals: TITLE_APPROVALS,
     timeline: [
-      "The 20,000 sq ft clubhouse was inaugurated on 21 March 2026.",
-      "The project is at the pre-possession stage, with possession expected by the end of 2026, one of the shortest delivery timelines in branded land.",
+      "The project overview gives handover as June 2029, while the project FAQ gives an estimated completion of December 2028. Confirm the date with the sales team.",
     ],
     amenities: [
-      "Konkan's largest clubhouse, 20,000 sq ft and 300 ft above the Arabian Sea, has an infinity pool, lap pool, jacuzzi, indoor gym, games room, spa, restaurant, party lounge and guest rooms.",
-      "Outdoor amenities include an amphitheatre, cabanas, stargazing zone, bonfire pits, skating rink, hammocks, swinging pavilions, rock climbing, a zip line, outdoor yoga and gym, a reflexology path, a pet park, organic farming and a flower nursery.",
-      "Master plan by Sanjay Puri Architects. The practice was founded in 1992 and is ranked in ArchDaily's top 100 architects worldwide, and also placed by the World Architecture Community (UK) and Archello. Hospitality is run by Miros Hotels & Resorts, led by Ranvir Bhandari, whose career includes Oberoi, ITC and Soneva.",
+      "Bayz 102 has 956 apartments across 102 levels. Highlights are the Skyway, a helipad with sky taxi and helicopter access, an infinity pool with canal views, an indoor gym, an aquatic gym and rain showers.",
+      "The full list also includes an anti-current pool, arcade zone, sky garden, sky golf, sky meditation deck, outdoor cinema, library, cafe, spa, jacuzzi, padel and tennis courts. Homes are fully furnished with premium Italian Dolce Vita furniture.",
     ],
     infrastructure: [
-      "The Mumbai–Goa NH 66 is a 470 km highway and its upgrade is 92% complete, which cuts travel time by 30–40% (Liases Foras).",
-      "The Konkan Marine Expressway is a 6-lane road by MSRDC costing ₹26,000 crore. It will bring the drive from Mumbai to about 3 hours.",
-      "Navi Mumbai International Airport opened in December 2025 and has capacity for 9 crore passengers a year. The Mumbai–Ratnagiri Ro-Ro ferry has been running since September 2025, and the Mumbai–Madgaon Vande Bharat reaches Khed in about 4 hours.",
-      "The Sagari Mahamarg coastal road corridor, about 400 km long, is operational and runs through Anjarle.",
+      "Business Bay Canal is 2 minutes away, and the Business Bay metro, Burj Khalifa and The Dubai Mall are each 3 minutes away.",
+      "Business Bay is one of Dubai's central, high-liquidity areas. This describes the area, not a guarantee of returns.",
+    ],
+    developer: DEVELOPER_FACTS,
+    market: [
+      INVESTMENT_POINTS,
+      "Published starting prices on the project page: studio from about AED 1.27 million, 1-bedroom executive from AED 2.23 million, 2-bedroom from AED 3.05 million, 3-bedroom from AED 4.9 million and 4-bedroom from AED 6.7 million. Rental income and resale value are not guaranteed.",
+    ],
+  },
+  shahrukhzres: {
+    location: [
+      "Shahrukhz Residences is in Dubai Maritime City, a waterfront district of Dubai. The project page puts Port Rashid Boat Station 2 minutes away and Dubai Cruise Terminal 2 about 3 minutes away.",
+      "Site visits: customers are welcome to visit. The sales team arranges the visit and meets you there, so confirm a date with them first.",
+    ],
+    payment_plan: [UNCONFIRMED_PLAN("30/70", getProject("shahrukhzres")!.plan.months)],
+    booking_policy: BOOKING_POLICY,
+    title_approvals: TITLE_APPROVALS,
+    timeline: ["The project page gives handover as Q4 2029."],
+    amenities: [
+      "Shahrukhz Residences is a fully furnished waterfront residence. Highlights are Infinity 33, the King's Club Deck, an indoor gym, the Longevity Lounge, a beach lagoon and a sports hub.",
+      "The full list also includes cryo therapy, an ice bath, a golf simulator, padel and tennis courts, a spa, aquatic gym, party hall, kids' areas, a business center and a prayer hall.",
+    ],
+    infrastructure: [
+      "Port Rashid Boat Station is 2 minutes away and Dubai Cruise Terminal 2 about 3 minutes. Dubai World Trade Centre and Jumeirah Beach are about 8 minutes away, Burj Khalifa 10 minutes and Dubai International Airport 15 minutes.",
     ],
     developer: [
-      "HoABL, The House of Abhinandan Lodha, has 6,500+ customers in 27+ countries, has sold 13+ million sq ft of land and has 34+ million sq ft under development.",
-      "Isle of Anjarle is a 100+ acre development, and 500+ families booked in the first 45 days.",
-      "Other HoABL developments: The Sarayu Ayodhya, a 7-star land development in Ayodhya, Uttar Pradesh; One Goa — The Rhapsody, a climate-positive residential community with clubhouse and beach access in Bicholim, Goa; Nagpur Marina, a 78-acre waterfront land development in Nagpur; Miros Riviera Resort Villas, fully-furnished resort villas with ownership and rental options in Vasco da Gama, Goa; Golden Gateway Mumbai 3.0, weekend residential plots at the foothills of Matheran, Neral; and Aero Estate, India's first AAA-rated land, in Khopoli, about 40 minutes from Navi Mumbai International Airport. HoABL also has a development at Alibaug, Maharashtra.",
+      ...DEVELOPER_FACTS,
+      "Shahrukhz Residences is Danube's latest launch. It is separate from Shahrukhz, a 55-storey commercial office tower on Sheikh Zayed Road.",
     ],
     market: [
-      "Liases Foras, an independent research firm, estimates Anjarle land should command ₹4,000+ per sq ft today.",
-      "Anjarle gets about 25,000 tourists a year, and villa stays run ₹6,000–7,000 a night (Liases Foras). Colliers projects footfall rising from 5.22 lakh to 11 lakh+ a year by 2035 and 65% occupancy by 2032.",
-      "Konkan land has appreciated about 3–4x over the last decade, and Liases Foras projects up to 5x by 2035. These are projections. Land appreciation is not guaranteed.",
-      "Projected regional milestones: the Konkan Marine Expressway's construction stage began March 2026, alongside the NH 66 upgrade completion target; a 20%+ rise in tourism footfall is projected for 2027 from improved road and air access; by 2034 the region's infrastructure is projected to support over 1 million annual tourists. These are projected milestones, not confirmed government timelines.",
-      "An illustrative return model for a premium villa built on this land (not the bare plot itself): about ₹2.25 crore average villa cost, about 55% average annual occupancy, about ₹18,000 a night average rate, about 15% rental yield, and about 53% ROI by year 10, with the initial investment modelled as recovered by year 4. Present this as a model contingent on building a villa, never as a return on the plot alone.",
+      INVESTMENT_POINTS,
+      "The project page gives a starting price of AED 1.65 million, with studio, 1, 2 and 3-bedroom apartments and penthouses. Prices for the other types are not published. Rental income and resale value are not guaranteed.",
     ],
   },
-  mopa: {
-    location: ["Illustrative: Pernem, North Goa, near Mopa's Manohar International Airport, in the state's northern coastal belt."],
-    payment_plan: [PAYMENT_PLAN_COMMON],
-    booking_policy: [
-      "The ₹45,000 token holds the plot for 15 days and is fully refundable within that window. After the agreement for sale, 10% of the plot value is retained on cancellation and the balance is refunded within 45 days.",
+  greenz: {
+    location: [
+      "Greenz is a gated community in Dubai Academic City, Dubai, close to Emirates Road, Dubai–Al Ain Road and Sheikh Mohammed Bin Zayed Road, with the Blue Line metro about 5 minutes away.",
+      "Site visits: customers are welcome to visit. The sales team arranges the visit and meets you there, so confirm a date with them first.",
     ],
-    title_approvals: [
-      "Goa RERA registration PRGO99000101. The land is NA-converted with clear title, and a title search report is shared at allotment.",
+    payment_plan: [
+      `${PLAN_BASE} For Greenz, the project FAQ gives 20% down, 1% monthly instalments for 40 months, and the final 40% after completion in Q4 2029. The project banner shows a 30/60 plan, so confirm the exact terms with the sales team. Greenz may also be eligible for Danube's Summer Bonanza offer, subject to its terms.`,
     ],
-    timeline: ["Illustrative: internal roads and utilities finish in 18 months, and handover follows in 24 months."],
-    amenities: ["Clubhouse, central green, jogging track and children's play area, in an illustrative layout."],
+    booking_policy: BOOKING_POLICY,
+    title_approvals: TITLE_APPROVALS,
+    timeline: ["The project page gives completion as Q4 2029."],
+    amenities: [
+      "Greenz is fully furnished with branded Italian furniture by Dolce Vita. The community covers about 4.9 million sq ft, with about 400,000 sq ft for lifestyle amenities and green space.",
+      "The four hubs are the Beach Hub, the Dancing Fountain, the Wellness Hub and the Sports Hub with 10 courts, plus a beach clubhouse with a rooftop deck. The list includes infinity and kids' pools, a gym, spa, padel, tennis, basketball, cricket and pickleball courts, jogging tracks and a prayer hall.",
+    ],
     infrastructure: [
-      "Manohar International Airport at Mopa is 8 km away and NH 66 is 3 km away.",
-      "Airport-led hotel and warehousing demand usually lifts land values around a new airport in its first decade. This is a pattern, not a guarantee.",
+      "Emirates Road is 1 minute away, Dubai–Al Ain Road 2 minutes, the Blue Line metro and Sheikh Mohammed Bin Zayed Road 5 minutes, Silicon Central Mall 10 minutes and Dubai Safari Park 11 minutes.",
+      "IMG Worlds of Adventure is about 13 minutes away, Global Village about 15 minutes, and Dubai International Airport and Downtown Dubai about 17 to 18 minutes.",
     ],
-    developer: ["Illustrative demo project, used for comparison only."],
-    market: ["Illustrative: land close to new airports has historically outperformed the regional average, but past performance does not guarantee future returns."],
-  },
-  nagpur: {
-    location: ["Illustrative: on the Samruddhi Mahamarg corridor in Nagpur, Vidarbha region of Maharashtra, near the MIHAN SEZ."],
-    payment_plan: [PAYMENT_PLAN_COMMON],
-    booking_policy: [
-      "The ₹45,000 token holds the plot for 15 days and is fully refundable within that window. After the agreement for sale, 10% of the plot value is retained on cancellation and the balance is refunded within 45 days.",
+    developer: [
+      ...DEVELOPER_FACTS,
+      "Greenz is described as Dubai's first fully furnished master villa project, with 768 townhouses and villas.",
     ],
-    title_approvals: [
-      "MahaRERA registration P99900000102. The land is zoned residential and light commercial with clear title, and a title search report is shared at allotment.",
+    market: [
+      INVESTMENT_POINTS,
+      "The project page lists 3-bedroom townhouses from about 2,350 sq ft, 4-bedroom townhouses at 2,750 to 3,100 sq ft, and 5-bedroom semi-detached villas of about 3,700 sq ft and twin villas of about 3,950 sq ft, all starting from AED 3.7 million. Danube says buyers can qualify for the Golden Visa at the AED 2 million property threshold, subject to government requirements.",
     ],
-    timeline: ["Illustrative: infrastructure is complete and plots are ready for registration."],
-    amenities: ["Streetlights, drainage, water line and a 24 m approach road, in an illustrative layout."],
-    infrastructure: [
-      "The Samruddhi Mahamarg interchange is 4 km away, the MIHAN SEZ 18 km and Nagpur airport 22 km.",
-      "Warehousing along the expressway corridor is taking up land parcels. This is a trend, not a guarantee.",
-    ],
-    developer: ["Illustrative demo project, used for comparison only."],
-    market: ["Illustrative: corridor land is the lowest ticket and the slowest to appreciate of the three, and suits a patient investor."],
   },
 };
+
+// Every project without a hand-written entry above gets one built from its
+// project page data, so the advisor can answer about all of them. Projects with
+// nothing left to book say so.
+function generated(p: Project): ProjectKnowledge {
+  const soldOut = p.availability === "sold_out";
+  const near = p.connectivity.map((c) => `${c.label} ${c.minutes} minutes`).join(", ");
+  const status = p.status === "completed" ? "completed" : p.status === "latest_launch" ? "a latest launch" : "ongoing";
+  const notes = p.notes?.length ? [`Notes from the project page: ${p.notes.join(" ")}`] : [];
+  const planLabel = p.planLabel ? `The project page lists the payment plan as ${p.planLabel}.` : "The project page does not list a payment plan.";
+  return {
+    location: [
+      `${p.name} is in ${p.location}, and is ${status}. The project page gives these travel times (the mode is not stated): ${near}.`,
+      soldOut
+        ? `${p.name} is sold out, so there are no units to book here.`
+        : "Site visits: customers are welcome to visit. The sales team arranges the visit and meets you there, so confirm a date with them first.",
+    ],
+    payment_plan: soldOut
+      ? [`${p.name} is sold out, so there is no plan to book. ${planLabel} Danube's 1% payment plan is a down payment of around 20%, then 1% of the price a month, then the balance when the building is ready.`]
+      : [
+          `${PLAN_BASE} ${planLabel} The page does not publish the terms, so the schedule shown in the app (20% down, then ${p.plan.months} monthly instalments of 1%, then the balance on completion) is indicative. Confirm this project's exact terms with the sales team.`,
+        ],
+    booking_policy: soldOut
+      ? [`${p.name} is sold out, so there is nothing to book. Offer an available project instead.`]
+      : BOOKING_POLICY,
+    title_approvals: TITLE_APPROVALS,
+    timeline: [
+      p.status === "completed" ? `${p.name} is completed${p.handover && p.handover !== "Completed" ? ` (${p.handover})` : ""}.` : `${p.name} is ${status}, with handover ${p.handover}.`,
+      ...notes,
+    ],
+    amenities: [
+      `Amenities listed on the project page: ${p.amenities?.join(", ")}.${p.furnished ? " Homes are fully furnished." : ""}`,
+      `${p.totalUnits ? `${p.totalUnits.toLocaleString("en-US")} ${p.office ? "offices" : "units"}` : "Unit count not stated"}${p.floors ? ` across ${p.floors} floors` : ""}. Layouts listed: ${p.types?.join(", ")}.`,
+    ],
+    infrastructure: [`Travel times from ${p.name}: ${near}.`],
+    developer: DEVELOPER_FACTS,
+    market: [
+      INVESTMENT_POINTS,
+      p.startingPrice
+        ? `The project page gives a starting price of AED ${p.startingPrice.toLocaleString("en-US")}${soldOut ? ", although the project is sold out" : ""}. Rental income and resale value are not guaranteed.`
+        : "The project page gives no starting price. Rental income and resale value are not guaranteed.",
+    ],
+  };
+}
+for (const p of PROJECTS) KNOWLEDGE[p.id] ??= generated(p);
 
 /** Approved response shapes. The agent paraphrases them and never goes beyond them. */
 export const OBJECTIONS: Record<ObjectionTopic, { general: string; byProject?: Record<string, string> }> = {
   why_here: {
     general:
-      "Answer with facts about the corridor, the infrastructure timeline and what the developer has already delivered. Pull the project's infrastructure and timeline topics for figures.",
+      "Answer with facts about the area, the travel times and what Danube has already delivered (16 projects delivered, per Danube). Pull the project's infrastructure and timeline topics for figures.",
     byProject: {
-      anjarle:
-        "Anjarle is true sea-and-hill land, which covers under 0.1% of India's coastline, and CRZ rules cap new supply by law. The infrastructure is arriving now: NH 66 is 92% upgraded, Navi Mumbai airport is open, and the coastal expressway will bring Mumbai to about 3 hours. The clubhouse is already built and was inaugurated on 21 March 2026, so there is something real to see.",
+      bayz102:
+        "Bayz 102 is the central address: Business Bay, 3 minutes from Burj Khalifa and The Dubai Mall, in an area Danube describes as high-liquidity with low vacancy, with a canal-view infinity pool and a sky-level helipad.",
+      shahrukhzres:
+        "Shahrukhz Residences is Danube's latest launch, a fully furnished waterfront residence in Dubai Maritime City, 15 minutes from Dubai International Airport and 10 minutes from Burj Khalifa.",
+      greenz:
+        "Greenz suits buyers who want space: a gated community of fully furnished 3 to 5-bedroom townhouses and villas, with a beach clubhouse and 10 sports courts, a few minutes from the Blue Line metro and the main Dubai highways.",
     },
   },
   price: {
     general:
-      "Never offer a discount or price exception. Offer, in this order: a smaller plot size, the instalment plan (₹45,000 token, then 20/40/40), and financing of up to 50% through partner banks. Ask which of these helps most.",
+      "Never offer a discount or price exception. Offer, in this order: a smaller unit or a lower floor, the 1% payment plan (about 20% down, then 1% a month, so the cost is spread over the build), and a different project with a lower entry ticket. Ask which of these helps most.",
   },
   consult_spouse: {
     general:
-      "Treat it as sensible. Offer to send a short summary of the shortlisted plot, price and payment plan, and suggest a time to reconnect together. Do not push for a decision today.",
+      "Treat it as sensible. Offer to send a short summary of the shortlisted unit, price and payment plan, and suggest a time to reconnect together. Do not push for a decision today.",
   },
   asset_class: {
     general:
-      "You may compare land with other assets: land needs no maintenance, has limited supply and does not depreciate like a built structure. Rental yield for leisure land at Anjarle is projected by Liases Foras at 12–15%, against 2–3% for metro residential. Say clearly that no one can guarantee returns and that land is illiquid compared with equities or FDs. On resale or exit later, point to the same projected appreciation range rather than a guarantee. On 'why land instead of an apartment', it's fine to note plainly that land carries no construction to maintain and lets the buyer control the timeline, without attaching a return figure to that point specifically.",
+      "You may point to what Danube highlights: freehold ownership, 100% tax-free income, Golden Visa eligibility, fully furnished homes that are ready to rent, and the 1% plan that spreads the cost. Say clearly that no one can guarantee rental income or resale value, and that property is less liquid than shares or deposits. Do not quote yields or price growth unless a tool result gives them.",
   },
   finance: {
     general:
-      "Explain the eligibility flow: income, existing obligations, employment type and credit band give an in-principle eligibility figure. Rates are indicative and a bank sanction is needed before anything is final. Offer to run the loan eligibility screen.",
+      "Danube's own plan is the finance: around 20% down, then 1% a month while the building is built, then the balance on completion, so the customer does not need a bank loan to start. Offer to run the payment calculator. If the customer asks about a mortgage for the completion balance, say the sales team can explain the options and offer a human advisor.",
   },
   stall: {
     general:
@@ -193,7 +259,7 @@ function connectivityText(projectId: string): string[] {
   const project = getProject(projectId);
   if (!project) return [];
   return [
-    `${project.name} distances: ` +
-      project.connectivity.map((c) => `${c.label} ${c.km} km${c.note ? ` (${c.note})` : ""}`).join("; ") + ".",
+    `${project.name} travel times (the project page does not say by what mode): ` +
+      project.connectivity.map((c) => `${c.label} ${c.minutes} minutes${c.note ? ` (${c.note})` : ""}`).join("; ") + ".",
   ];
 }

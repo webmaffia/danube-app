@@ -26,7 +26,7 @@ import {
   type Intent,
   type Profile,
 } from "@/lib/agent/prompt";
-import type { PlotOverrides } from "@/lib/inventory";
+import type { UnitOverrides } from "@/lib/inventory";
 import type { TurnContext } from "@/lib/agent/prompt";
 
 export const MAX_ROUNDS = 4;
@@ -52,7 +52,7 @@ export interface TurnInput {
   profile: Profile;
   intent: Intent;
   evidence: Evidence;
-  overrides?: PlotOverrides;
+  overrides?: UnitOverrides;
   /** What the customer sees and where the booking stands. */
   context?: TurnContext;
 }
@@ -95,7 +95,7 @@ export async function runTurn(input: TurnInput, deps: TurnDeps): Promise<void> {
   const newMessages: ChatCompletionMessageParam[] = [];
   if (input.user !== null) {
     newMessages.push({ role: "user", content: input.user });
-    // What the customer says is fair to repeat back ("around 45 lakh").
+    // What the customer says is fair to repeat back ("around AED 1.2 million").
     evidence = mergeEvidence(evidence, collectEvidence(input.user));
   }
 

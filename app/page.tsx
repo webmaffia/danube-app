@@ -1,50 +1,39 @@
 import { Logo } from "@/components/Logo";
-import { Slideshow, type Slide } from "@/components/Slideshow";
+import { Skyline } from "@/components/Skyline";
 import { ResumeCta } from "@/components/ResumeCta";
 import { WelcomeBack } from "@/components/WelcomeBack";
-
-// Real amenity photography from the sample project. The app covers HoABL's
-// whole portfolio; Isle of Anjarle is the featured example.
-const SLIDES: Slide[] = [
-  { src: "/projects/anjarle/amenities/sunset-point.jpg", alt: "Sunset point", caption: "Sunset point · Isle of Anjarle" },
-  { src: "/projects/anjarle/amenities/clubhouse01.jpg", alt: "Clubhouse", caption: "Clifftop clubhouse · Isle of Anjarle" },
-  { src: "/projects/anjarle/amenities/open-air-cafe.jpg", alt: "Open-air café", caption: "Open-air café · Isle of Anjarle" },
-  { src: "/projects/anjarle/amenities/entrance-gate.jpg", alt: "Grand entrance", caption: "Grand entrance · Isle of Anjarle" },
-  { src: "/projects/anjarle/amenities/hammock.jpg", alt: "Hammock garden", caption: "Hammock garden · Isle of Anjarle" },
-  { src: "/projects/anjarle/amenities/stargazing-and-bornfire.jpg", alt: "Stargazing and bonfire", caption: "Stargazing deck · Isle of Anjarle" },
-  { src: "/projects/anjarle/amenities/swinging-pavilion.jpg", alt: "Swinging pavilion", caption: "Swinging pavilion · Isle of Anjarle" },
-  { src: "/projects/anjarle/amenities/amphitheatre-guest-rooms-zip-line.jpg", alt: "Amphitheatre", caption: "Amphitheatre · Isle of Anjarle" },
-];
 
 export default function Landing() {
   return (
     <main className="relative flex min-h-full flex-col overflow-hidden bg-site text-white">
-      <Slideshow slides={SLIDES} />
-      {/* Scrims keep the logo and copy legible over any photo. */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/60 via-black/35 to-black/90" />
+      {/* A generated skyline until Danube supplies project photography. */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_70%_at_50%_0%,#173e62_0%,#0d2740_45%,#050e17_85%)]" />
+      <Skyline className="pointer-events-none absolute inset-x-0 bottom-0 h-[60%] w-full text-[#BDA588]" opacity={0.35} />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/80" />
 
       <header className="relative z-10 flex items-start justify-between px-6 pt-6">
-        <Logo className="h-14" priority />
+        <Logo className="w-48" priority />
         <span className="rounded-full border border-white/35 bg-black/20 px-2.5 py-1 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-white/85 backdrop-blur">
           Prototype
         </span>
       </header>
 
       <section className="relative z-10 mt-auto px-6 pb-4">
-        <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-[#f0c27a] [text-shadow:0_1px_6px_rgb(0_0_0/0.6)]">Land Advisor</p>
+        <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-[#d9c6a6] [text-shadow:0_1px_6px_rgb(0_0_0/0.6)]">Property Advisor</p>
         <h1 className="font-display text-[38px] font-semibold leading-[1.04] tracking-tight [text-shadow:0_2px_12px_rgb(0_0_0/0.35)]">
-          Find land worth owning, in one conversation.
+          Find a Dubai home worth owning, in one conversation.
         </h1>
         <p className="mt-4 max-w-[36ch] text-[15px] leading-relaxed text-white/90 [text-shadow:0_1px_6px_rgb(0_0_0/0.5)]">
-          Tell our Land Advisor what you&rsquo;re looking for. It knows every HoABL project, plot and price, shows you what fits, and can hold a
-          plot for you when you&rsquo;re ready.
+          Tell our Property Advisor what you&rsquo;re looking for. It knows the Danube projects in this demo, their units and payment plan, shows you
+          what fits, and can hold a unit for you when you&rsquo;re ready.
         </p>
       </section>
 
       <section className="relative z-10 px-6 pb-8 pt-4">
         <ResumeCta />
         <p className="mt-4 text-center text-[12px] leading-relaxed text-white/65">
-          You&rsquo;ll be speaking with HoABL&rsquo;s virtual Land Advisor. OTP, payment, KYC and loan steps are simulated in this prototype.
+          You&rsquo;ll be speaking with Danube&rsquo;s virtual Property Advisor. OTP, payment and KYC steps are simulated in this prototype, and
+          prices are sample data.
         </p>
         <p className="mt-2 text-center text-[12px]">
           <a href="/console" target="_blank" rel="noreferrer" className="font-semibold text-white/70 underline underline-offset-2">

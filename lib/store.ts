@@ -12,7 +12,7 @@ import type { AgentEvent } from "@/lib/agent/run";
 import { emitAgentEvent, onAgentEvent } from "@/lib/bus";
 import { emptyEvidence, type Evidence, type Violation } from "@/lib/agent/guard";
 import { advanceIntent, emptyProfile, type Intent, type Profile } from "@/lib/agent/prompt";
-import type { PlotOverrides } from "@/lib/inventory";
+import type { UnitOverrides } from "@/lib/inventory";
 import type { Screen } from "@/lib/journey";
 import { QUESTIONS, handoff, intro, profileFrom } from "@/lib/onboarding";
 import { createBooking } from "@/lib/agent/tools";
@@ -69,11 +69,13 @@ export interface SearchResult {
   name: string;
   location: string;
   illustrative: boolean;
+  sold_out?: boolean;
+  status?: string;
   entry_ticket: number;
   rate_per_sqft: number;
-  cagr_range: string;
+  outlook: string;
   hold: string;
-  available_plots: number;
+  available_units: number;
   available_in_budget: number;
   cheapest_in_budget: number | null;
   fit_score: number;
@@ -84,8 +86,8 @@ export interface SearchResult {
 
 export interface Booking {
   booking_id: string;
-  plot_id: string;
-  plot_no: string;
+  unit_id: string;
+  unit_no: string;
   project_id: string;
   project_name: string;
   size_sqft: number;
@@ -97,26 +99,19 @@ export interface Booking {
 }
 
 export interface Kyc {
-  panMasked: string;
+  idMasked: string;
   name: string;
   verifiedAt: number;
 }
 
-export interface LoanResult {
-  band: string;
-  rate: number;
-  eligibleAmount: number;
-  emi: number;
-  tenureYears: number;
-  sanction?: { ref: string; amount: number; validUntil: number };
-}
-
-/** The post-KYC steps of the booking, in order, each stamped when done. */
-export const PLAN_STEPS = ["i20", "allotment", "i40", "registration"] as const;
+/** The post-KYC steps of the booking, in order, each stamped when done: the balance of
+ * the down payment, the sales and purchase agreement, Oqood registration and the
+ * first 1% monthly instalment. */
+export const PLAN_STEPS = ["down", "spa", "oqood", "monthly"] as const;
 export type PlanStep = (typeof PLAN_STEPS)[number];
 export type PlanProgress = Partial<Record<PlanStep, number>>;
 
-/** The next step still to do, or null once registration is complete. */
+/** The next step still to do, or null once every step is complete. */
 export function nextPlanStep(plan: PlanProgress): PlanStep | null {
   return PLAN_STEPS.find((k) => !plan[k]) ?? null;
 }
@@ -127,16 +122,15 @@ interface SessionState {
   evidence: Evidence;
   history: ChatCompletionMessageParam[];
   turns: Turn[];
-  overrides: PlotOverrides;
+  overrides: UnitOverrides;
   guardHits: GuardHit[];
   /** What the customer is looking at. `seq` bumps when the agent asks for a screen, so the layout navigates. */
   screen: Screen | null;
   screenSeq: number;
-  selectedPlot: string | null;
+  selectedUnit: string | null;
   lastSearch: SearchResult[];
   booking: Booking | null;
   kyc: Kyc | null;
-  loan: LoanResult | null;
   plan: PlanProgress;
   trace: TraceEntry[];
   metrics: TurnMetric[];
@@ -158,19 +152,18 @@ interface SessionState {
   send: (text: string | null) => Promise<void>;
   /** Tells the advisor something happened in the app (payment, KYC) and lets it respond. */
   sendEvent: (label: string, detail: string, intent: Intent) => Promise<void>;
-  /** Shows what carries over to a human advisor, then asks the Land Advisor to hand off. */
+  /** Shows what carries over to a human advisor, then asks the Property Advisor to hand off. */
   requestHuman: () => Promise<void>;
   /** Cancels the in-flight turn (barge-in). */
   abort: () => void;
   setScreen: (screen: Screen | null) => void;
-  selectPlot: (plotId: string | null) => void;
+  selectUnit: (unitId: string | null) => void;
   setBooking: (booking: Booking | null) => void;
   markPaid: (method: string) => void;
   setKyc: (kyc: Kyc) => void;
-  setLoan: (loan: LoanResult) => void;
   completePlanStep: (step: PlanStep) => void;
-  /** Holds a plot straight from a button, without the advisor. False if it can't be held. */
-  bookPlot: (plotId: string) => boolean;
+  /** Holds a unit straight from a button, without the advisor. False if it can't be held. */
+  bookUnit: (unitId: string) => boolean;
   reset: () => void;
 }
 
@@ -180,15 +173,14 @@ const initial = () => ({
   evidence: emptyEvidence(),
   history: [] as ChatCompletionMessageParam[],
   turns: [] as Turn[],
-  overrides: {} as PlotOverrides,
+  overrides: {} as UnitOverrides,
   guardHits: [] as GuardHit[],
   screen: null as Screen | null,
   screenSeq: 0,
-  selectedPlot: null as string | null,
+  selectedUnit: null as string | null,
   lastSearch: [] as SearchResult[],
   booking: null as Booking | null,
   kyc: null as Kyc | null,
-  loan: null as LoanResult | null,
   plan: {} as PlanProgress,
   trace: [] as TraceEntry[],
   metrics: [] as TurnMetric[],
@@ -206,7 +198,7 @@ export const useSession = create<SessionState>()(
       async function runTurn(user: string | null, visible: Turn | null) {
         // A new message while a turn is running replaces that turn.
         if (get().busy) get().abort();
-        const { history, profile, intent, evidence, overrides, screen, booking, kyc, loan, plan } = get();
+        const { history, profile, intent, evidence, overrides, screen, booking, kyc, plan } = get();
         const controller = new AbortController();
         inflight = controller;
         const turnNo = get().metrics.length + 1;
@@ -234,7 +226,7 @@ export const useSession = create<SessionState>()(
               intent,
               evidence,
               overrides,
-              context: { screen, booking: booking && { ...booking }, kyc: Boolean(kyc), plan: nextPlanStep(plan), loan: loan && { eligibleAmount: loan.eligibleAmount, rate: loan.rate, sanctioned: Boolean(loan.sanction) } },
+              context: { screen, booking: booking && { ...booking }, kyc: Boolean(kyc), plan: nextPlanStep(plan) },
             }),
             signal: controller.signal,
           });
@@ -274,8 +266,8 @@ export const useSession = create<SessionState>()(
               set((s) => ({
                 screen: { view: event.view as Screen["view"], id: event.id },
                 screenSeq: s.screenSeq + 1,
-                // Any view that names a plot makes it the plot in focus.
-                selectedPlot: event.id && /^[a-z]+-\d+$/.test(event.id) ? event.id : s.selectedPlot,
+                // Any view that names a unit makes it the unit in focus.
+                selectedUnit: event.id && /^[a-z0-9]+-\d+$/.test(event.id) ? event.id : s.selectedUnit,
                 turns: [...s.turns, { kind: "show", view: event.view, id: event.id }],
               }));
               break;
@@ -306,20 +298,20 @@ export const useSession = create<SessionState>()(
         if (!r || "error" in r) return;
         if (name === "search_projects") set({ lastSearch: r.projects as SearchResult[] });
         if (name === "create_booking") {
-          const plot = r.plot as { id: string; plot_no: string; project_id: string; project_name: string; size_sqft: number; price: number };
+          const unit = r.unit as { id: string; unit_no: string; project_id: string; project_name: string; size_sqft: number; price: number };
           set({
             booking: {
               booking_id: r.booking_id as string,
-              plot_id: plot.id,
-              plot_no: plot.plot_no,
-              project_id: plot.project_id,
-              project_name: plot.project_name,
-              size_sqft: plot.size_sqft,
-              price: plot.price,
+              unit_id: unit.id,
+              unit_no: unit.unit_no,
+              project_id: unit.project_id,
+              project_name: unit.project_name,
+              size_sqft: unit.size_sqft,
+              price: unit.price,
               token_amount: r.token_amount as number,
               status: "initiated",
             },
-            selectedPlot: plot.id,
+            selectedUnit: unit.id,
           });
         }
       }
@@ -333,8 +325,8 @@ export const useSession = create<SessionState>()(
           get().abort();
           set(initial());
           try {
-            sessionStorage.removeItem("hoabl-live-seconds");
-            sessionStorage.removeItem("hoabl-trail");
+            sessionStorage.removeItem("danube-live-seconds");
+            sessionStorage.removeItem("danube-trail");
           } catch {}
         },
 
@@ -401,7 +393,7 @@ export const useSession = create<SessionState>()(
           let ob = get().onboarding;
           // Off the advisor screen, anything that isn't one of the question's
           // options means the customer has moved on: stop the welcome questions
-          // and let the Land Advisor handle it.
+          // and let the Property Advisor handle it.
           if (ob && text !== null && get().screen && !QUESTIONS[ob.answers.length]?.options.includes(text)) {
             set({ onboarding: null });
             ob = null;
@@ -440,7 +432,7 @@ export const useSession = create<SessionState>()(
           const items: HandoffItem[] = [
             { label: "Buyer profile", done: Boolean(s.profile.purpose || s.profile.budget_max) },
             { label: "Project viewed", done: s.introSeen.length > 0 || s.lastSearch.length > 0 },
-            { label: "Plots viewed & shortlisted", done: Boolean(s.selectedPlot) },
+            { label: "Units viewed & shortlisted", done: Boolean(s.selectedUnit) },
             { label: "KYC verified", done: Boolean(s.kyc) },
             { label: "Token payment completed", done: s.booking?.status === "paid" },
           ];
@@ -451,7 +443,7 @@ export const useSession = create<SessionState>()(
         endFinding: () => set({ findingSince: null }),
         markIntroSeen: (projectId) => set((s) => ({ introSeen: s.introSeen.includes(projectId) ? s.introSeen : [...s.introSeen, projectId] })),
         setScreen: (screen) => set({ screen }),
-        selectPlot: (plotId) => set({ selectedPlot: plotId }),
+        selectUnit: (unitId) => set({ selectedUnit: unitId }),
         setBooking: (booking) => set({ booking }),
 
         markPaid: (method) =>
@@ -459,17 +451,16 @@ export const useSession = create<SessionState>()(
             s.booking
               ? {
                   booking: { ...s.booking, status: "paid", method, paidAt: Date.now() },
-                  overrides: { ...s.overrides, [s.booking.plot_id]: "held" },
+                  overrides: { ...s.overrides, [s.booking.unit_id]: "held" },
                 }
               : {},
           ),
 
         setKyc: (kyc) => set({ kyc }),
-        setLoan: (loan) => set({ loan }),
         completePlanStep: (step) => set((s) => ({ plan: { ...s.plan, [step]: Date.now() } })),
 
-        bookPlot: (plotId) => {
-          const result = createBooking({ plot_id: plotId }, { overrides: get().overrides });
+        bookUnit: (unitId) => {
+          const result = createBooking({ unit_id: unitId }, { overrides: get().overrides });
           if ("error" in result) return false;
           absorbToolResult("create_booking", result);
           set((s) => ({ intent: advanceIntent(s.intent, "booking_initiated") }));
@@ -478,7 +469,7 @@ export const useSession = create<SessionState>()(
       };
     },
     {
-      name: "hoabl-session",
+      name: "danube-session",
       storage: createJSONStorage(() => localStorage),
       // busy and error are per-request and shouldn't survive a refresh.
       partialize: (s) => ({
@@ -490,11 +481,10 @@ export const useSession = create<SessionState>()(
         overrides: s.overrides,
         guardHits: s.guardHits,
         screen: s.screen,
-        selectedPlot: s.selectedPlot,
+        selectedUnit: s.selectedUnit,
         lastSearch: s.lastSearch,
         booking: s.booking,
         kyc: s.kyc,
-        loan: s.loan,
         plan: s.plan,
         trace: s.trace,
         metrics: s.metrics,
@@ -531,11 +521,11 @@ async function* readEvents(body: ReadableStream<Uint8Array>): AsyncGenerator<Age
 /** What the console tab sees. Written to localStorage and broadcast on every change. */
 export type LiveSnapshot = Pick<
   SessionState,
-  "profile" | "intent" | "turns" | "guardHits" | "trace" | "metrics" | "booking" | "kyc" | "loan" | "screen" | "startedAt" | "busy"
+  "profile" | "intent" | "turns" | "guardHits" | "trace" | "metrics" | "booking" | "kyc" | "screen" | "startedAt" | "busy"
 > & { avatar?: { status: string; mode: string; liveSeconds: number }; updatedAt: number };
 
-export const LIVE_KEY = "hoabl-live";
-export const LIVE_CHANNEL = "hoabl-live";
+export const LIVE_KEY = "danube-live";
+export const LIVE_CHANNEL = "danube-live";
 
 let extra: LiveSnapshot["avatar"] | undefined;
 /** The avatar controller reports its state here so the console can show it. */
@@ -561,7 +551,6 @@ function publish(): void {
       metrics: s.metrics,
       booking: s.booking,
       kyc: s.kyc,
-      loan: s.loan,
       screen: s.screen,
       startedAt: s.startedAt,
       busy: s.busy,

@@ -1,6 +1,6 @@
 // Streams the spoken reply sentence by sentence, in the order BUILD.md §7 asks
 // for: a sentence goes out as soon as it is complete, and a sentence carrying
-// a digit (figure, date, plot number) goes out only after its provenance check
+// a digit (figure, date, unit number) goes out only after its provenance check
 // passes. A sentence that fails stops the stream, and the caller retracts and
 // regenerates.
 
@@ -58,7 +58,7 @@ export class SentenceGate {
     while (!this.failed) {
       const rest = say.slice(this.consumed);
       // A sentence is complete once terminal punctuation is followed by
-      // whitespace, so "₹61.94 lakh" never splits at the decimal point.
+      // whitespace, so "AED 1.25M" never splits at the decimal point.
       const m = rest.match(/^\s*([\s\S]*?[.?!]+)(?=\s)/);
       if (m) {
         this.consumed += m[0].length;

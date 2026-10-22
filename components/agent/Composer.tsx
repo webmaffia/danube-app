@@ -96,7 +96,7 @@ export function Composer({
             className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${s.mic}`}
             aria-label={listening ? "Stop listening" : speaking ? "Stop the advisor" : "Talk"}
           >
-            {listening && <span className="pulse-ring absolute inset-0 rounded-full bg-[#d6a24a]" />}
+            {listening && <span className="pulse-ring absolute inset-0 rounded-full bg-[#BDA588]" />}
             {speaking && !listening ? <StopIcon className="relative h-5 w-5" /> : <MicIcon className="relative h-5 w-5" />}
           </button>
         ) : null}

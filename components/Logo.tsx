@@ -1,16 +1,16 @@
 import Image from "next/image";
 
-// The House of Abhinandan Lodha wordmark: white on transparent, for the
-// app's dark brand background.
-export function Logo({ className = "h-10", priority = false }: { className?: string; priority?: boolean }) {
+// The Danube wordmark: red and white on transparent, for the app's dark navy
+// brand background. Source: danubeproperties.com.
+export function Logo({ className = "w-40", priority = false }: { className?: string; priority?: boolean }) {
   return (
     <Image
-      src="/brand/hoabl-logo.png"
-      alt="The House of Abhinandan Lodha"
-      width={323}
-      height={176}
+      src="/brand/danube-logo.png"
+      alt="Danube Properties"
+      width={373}
+      height={20}
       priority={priority}
-      className={`w-auto ${className}`}
+      className={`h-auto ${className}`}
     />
   );
 }

@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSession } from "@/lib/store";
 import { routeFor } from "@/lib/journey";
-import { findPlot, getProject } from "@/lib/inventory";
+import { findUnit, getProject } from "@/lib/inventory";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/journey/ui";
 
@@ -28,8 +28,8 @@ function summarise(): Summary | null {
   const s = useSession.getState();
   if (!s.profile.name) return null;
 
-  const plot = s.selectedPlot ? findPlot(s.selectedPlot) : undefined;
-  const projectId = plot?.projectId ?? s.booking?.project_id ?? (s.screen?.view === "project" || s.screen?.view === "plots" ? s.screen.id : null) ?? s.lastSearch[0]?.id;
+  const unit = s.selectedUnit ? findUnit(s.selectedUnit) : undefined;
+  const projectId = unit?.projectId ?? s.booking?.project_id ?? (s.screen?.view === "project" || s.screen?.view === "units" ? s.screen.id : null) ?? s.lastSearch[0]?.id;
   const project = projectId ? getProject(projectId) : undefined;
   const explored = Boolean(project) || s.introSeen.length > 0;
   const viewed = s.lastSearch.length;
@@ -38,9 +38,9 @@ function summarise(): Summary | null {
     first: s.profile.name.split(" ")[0],
     href: s.screen ? routeFor(s.screen) : "/agent",
     steps: [
-      { label: project ? `Exploring ${project.name}` : "Exploring HoABL projects", done: explored },
+      { label: project ? `Exploring ${project.name}` : "Exploring Danube projects", done: explored },
       { label: "Projects viewed", done: viewed > 0, note: viewed > 0 ? `${viewed} viewed` : undefined },
-      { label: "Plot shortlisted", done: Boolean(s.selectedPlot), note: plot ? `Plot ${plot.plotNo}` : undefined },
+      { label: "Unit shortlisted", done: Boolean(s.selectedUnit), note: unit ? `Unit ${unit.unitNo}` : undefined },
       { label: "Token payment", done: s.booking?.status === "paid" },
       { label: "KYC", done: Boolean(s.kyc) },
     ],
@@ -65,7 +65,7 @@ export function WelcomeBack() {
       style={{ background: "var(--brand-gradient), var(--paper)" }}
     >
       <div className="mb-6 flex justify-center">
-        <Logo className="h-14" />
+        <Logo className="w-48" />
       </div>
       <h2 className="text-center font-display text-[28px] font-semibold leading-tight tracking-tight">Welcome back, {summary.first}!</h2>
       <p className="mx-auto mt-2 max-w-[30ch] text-center text-[14px] leading-relaxed text-white/70">Here&rsquo;s where things stand in your journey:</p>

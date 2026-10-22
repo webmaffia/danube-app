@@ -1,49 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "@/lib/store";
 import { avatar } from "@/lib/avatar/controller";
 import { projectReturnLine } from "@/lib/avatar/screen-lines";
-import { entryTicket, getPlots, getProject, PROJECTS } from "@/lib/inventory";
+import { STATUS_LABEL, availabilityLabel, entryTicket, getUnits, getProject, PROJECTS } from "@/lib/inventory";
 import { lookupKnowledge } from "@/lib/knowledge";
-import { lakh } from "@/lib/journey";
+import { aedShort } from "@/lib/journey";
 import { SITE_MAPS, flushScroll } from "@/lib/maps";
 import { Badge, Button, Card, Disclosure, Section, Stat } from "@/components/journey/ui";
-import { Contours, PlotGrid } from "@/components/Contours";
+import { Skyline, UnitGrid } from "@/components/Skyline";
 import { FilmStrip } from "@/components/journey/FilmStrip";
-import { Lightbox, type LightboxImage } from "@/components/journey/Lightbox";
-import { VideoSlider } from "@/components/journey/VideoSlider";
-import { InvestmentForecast } from "@/components/journey/InvestmentForecast";
-import { DownloadIcon, PinIcon } from "@/components/icons";
-
-const AMENITIES: [string, string][] = [
-  ["clubhouse01", "Clifftop clubhouse"],
-  ["entrance-gate", "Grand entrance"],
-  ["sunset-point", "Sunset point"],
-  ["open-air-cafe", "Open-air café"],
-  ["amphitheatre-guest-rooms-zip-line", "Amphitheatre and zip line"],
-  ["stargazing-and-bornfire", "Stargazing and bonfire"],
-  ["hammock", "Hammock garden"],
-  ["swinging-pavilion", "Swinging pavilion"],
-  ["skating-rink", "Skating rink"],
-  ["open-gym-and-bird-bath", "Open gym"],
-  ["pet-park", "Pet park"],
-  ["flower-nursary", "Flower nursery"],
-];
-
-const REELS = [
-  { src: "/projects/anjarle/videos/Amenities.mp4", label: "Amenities" },
-  { src: "/projects/anjarle/videos/connectivity_1.mp4", label: "Connectivity" },
-  { src: "/projects/anjarle/videos/Nearby Attractions_2.mp4", label: "Nearby attractions" },
-];
-
-const AMENITY_IMAGES: LightboxImage[] = AMENITIES.map(([file, label]) => ({ src: `/projects/anjarle/amenities/${file}.jpg`, label }));
-const MASTER_PLAN: LightboxImage = { src: "/projects/anjarle/renders/top-plan.jpg", label: "Master plan" };
+import { PinIcon } from "@/components/icons";
 
 export default function ProjectDetail() {
-  const [viewer, setViewer] = useState<{ images: LightboxImage[]; start: number } | null>(null);
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { overrides, lastSearch, requestHuman, markIntroSeen, introSeen, profile } = useSession();
@@ -56,18 +28,19 @@ export default function ProjectDetail() {
   if (!project) return <p className="p-6 text-ink-soft">Project not found.</p>;
 
   const films = project.videos ?? [];
-  const plots = getPlots(project.id, overrides);
-  const available = plots.filter((p) => p.status === "available").length;
+  const units = getUnits(project.id, overrides);
+  const available = units.filter((p) => p.status === "available").length;
+  const soldOut = project.availability === "sold_out";
   const fit = lastSearch.find((s) => s.id === project.id);
-  const ladder = [...project.connectivity].sort((a, b) => a.km - b.km);
-  const maxKm = Math.max(...ladder.map((c) => c.km));
+  const ladder = [...project.connectivity].sort((a, b) => a.minutes - b.minutes);
+  const maxMin = Math.max(...ladder.map((c) => c.minutes));
   const title = lookupKnowledge("title_approvals", project.id);
   const timeline = lookupKnowledge("timeline", project.id);
-  const isAnjarle = project.id === "anjarle";
+  const amenities = lookupKnowledge("amenities", project.id);
 
   return (
     <div>
-      {/* Hero: the films inline, narrated by the Land Advisor, else the photo or a site plan. */}
+      {/* Hero: the films inline, narrated by the Property Advisor, else the photo or a generated skyline. */}
       {films.length > 0 ? (
         <FilmStrip
           key={project.id}
@@ -75,37 +48,28 @@ export default function ProjectDetail() {
           videos={films}
           poster={project.image ?? films[0].poster}
           startDone={introSeen.includes(project.id)}
-          returnLine={projectReturnLine(project.name, available, plots.length, entryTicket(project), profile.name?.split(" ")[0] ?? null)}
+          returnLine={projectReturnLine(project.name, available, units.length, entryTicket(project), profile.name?.split(" ")[0] ?? null)}
           onFinished={() => markIntroSeen(project.id)}
         />
       ) : (
-        <div className="relative aspect-video w-full overflow-hidden bg-site text-site-ink">
+        <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-[#173e62] to-[#07131f] text-site-ink">
           {project.image ? (
             <Image src={project.image} alt={project.name} fill sizes="428px" className="object-cover" priority />
           ) : (
             <>
-              <Contours className="absolute inset-0 h-full w-full" opacity={0.25} />
-              <PlotGrid className="absolute left-1/2 top-1/2 h-28 -translate-x-1/2 -translate-y-1/2" />
+              <Skyline className="absolute inset-0 h-full w-full" opacity={0.3} />
+              <UnitGrid className="absolute left-1/2 top-1/2 h-28 -translate-x-1/2 -translate-y-1/2" />
             </>
           )}
         </div>
       )}
 
       <div className="px-4 pb-3 pt-4">
-        {project.illustrative && <Badge tone="gold">Illustrative project</Badge>}
-        <div className="flex items-start justify-between gap-3">
-          <h1 className="mt-1 font-display text-[26px] font-semibold leading-tight tracking-tight">{project.name}</h1>
-          {isAnjarle && (
-            <a
-              href="/Isle-of-Anjarle.pdf"
-              download
-              className="mt-1 flex shrink-0 items-center gap-1.5 rounded-full border border-line bg-card px-3 py-1.5 text-[12px] font-semibold text-ink-soft active:scale-[0.98]"
-            >
-              <DownloadIcon className="h-3.5 w-3.5" />
-              Brochure
-            </a>
-          )}
+        <div className="flex flex-wrap gap-1.5">
+          <Badge tone={soldOut ? "muted" : "verd"}>{soldOut ? availabilityLabel(project) : STATUS_LABEL[project.status]}</Badge>
+          {project.illustrative && <Badge tone="gold">Sample pricing</Badge>}
         </div>
+        <h1 className="mt-1 font-display text-[26px] font-semibold leading-tight tracking-tight">{project.name}</h1>
         <p className="mt-0.5 flex items-center gap-1 text-[13px] text-ink-soft">
           <PinIcon className="h-3.5 w-3.5" />
           {project.location}
@@ -113,15 +77,48 @@ export default function ProjectDetail() {
       </div>
 
       <div className="grid grid-cols-4 gap-2 border-b border-line bg-card px-4 py-3">
-        <Stat label="From" value={lakh(entryTicket(project), 1)} />
-        <Stat label="₹/sq ft" value={project.ratePerSqft.toLocaleString("en-IN")} />
-        <Stat label="Available" value={`${available}/${plots.length}`} />
+        <Stat label={soldOut ? "Was from" : "From"} value={entryTicket(project) > 0 ? aedShort(entryTicket(project), 1) : "n/s"} />
+        <Stat label="Handover" value={project.handover.replace(/ 20(\d\d)/, " '$1")} />
+        <Stat label="Available" value={soldOut ? "Sold out" : `${available}/${units.length}`} />
         <Stat label="Hold" value={project.hold.replace(" years", "y")} />
       </div>
 
-      <Section title="AI investment forecast">
-        <InvestmentForecast price={entryTicket(project)} />
+      {soldOut ? (
+        <Section title="Availability">
+          <Card className="px-3.5 py-3">
+            <p className="text-[13.5px] leading-snug">
+              {project.name} is {project.status === "completed" ? "completed and sold out" : "sold out"}, so there are no units to book. {project.planLabel ? `Its page lists the payment plan as ${project.planLabel}. ` : ""}Ask the Property Advisor about a similar project that still has units.
+            </p>
+            <Button variant="secondary" size="sm" className="mt-2.5" onClick={() => router.push("/units")}>
+              See projects you can book
+            </Button>
+          </Card>
+        </Section>
+      ) : (
+      <Section title="The 1% payment plan">
+        <Card className="px-3.5 py-3">
+          <p className="text-[13.5px] leading-snug">
+            Around 20% down, then 1% of the price a month while the building is built, and the balance on completion ({project.handover}).
+            {project.plan.confirmed ? " These are the terms on the project page." : " This project's page doesn't publish its exact terms, so the schedule is indicative."} See what it comes to for a unit in the calculator.
+          </p>
+          <Button variant="secondary" size="sm" className="mt-2.5" onClick={() => router.push("/money/calculator")}>
+            Open the calculator
+          </Button>
+        </Card>
       </Section>
+      )}
+
+      {project.notes?.length ? (
+        <Section title="Notes from the project page">
+          <Card className="divide-y divide-line">
+            {project.notes.map((n) => (
+              <p key={n} className="px-3.5 py-2.5 text-[13px] leading-snug">
+                {n}
+              </p>
+            ))}
+          </Card>
+        </Section>
+      ) : null}
 
       {fit && (
         <Section title="Why it fits you">
@@ -138,13 +135,7 @@ export default function ProjectDetail() {
         </Section>
       )}
 
-      {isAnjarle && (
-        <Section title="Watch and explore">
-          <VideoSlider items={REELS} />
-        </Section>
-      )}
-
-      <Section title="Getting there">
+      <Section title="Getting around (travel time)">
         <Card className="px-3.5 py-3">
           <ol className="relative">
             <span className="absolute bottom-2 left-[5px] top-2 w-px bg-line" />
@@ -154,10 +145,10 @@ export default function ProjectDetail() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline justify-between gap-2">
                     <span className="truncate text-[13.5px] font-medium">{c.label}</span>
-                    <span className="shrink-0 text-[13.5px] font-semibold">{c.km} km</span>
+                    <span className="shrink-0 text-[13.5px] font-semibold">{c.minutes} min</span>
                   </div>
                   <div className="mt-1 h-1 rounded-full bg-line">
-                    <div className="h-1 rounded-full bg-verd/70" style={{ width: `${Math.max(4, (c.km / maxKm) * 100)}%` }} />
+                    <div className="h-1 rounded-full bg-verd/70" style={{ width: `${Math.max(4, (c.minutes / maxMin) * 100)}%` }} />
                   </div>
                   {c.note && <div className="mt-0.5 text-[11.5px] text-ink-soft">{c.note}</div>}
                 </div>
@@ -169,10 +160,10 @@ export default function ProjectDetail() {
 
       {SITE_MAPS[project.id] && (
         <div id="location" className="scroll-mt-2">
-          <Section title="Site location">
+          <Section title="Location">
             <Card className="overflow-hidden">
               <iframe
-                title={`${project.name} site map`}
+                title={`${project.name} map`}
                 src={SITE_MAPS[project.id].embed}
                 loading="lazy"
                 allowFullScreen
@@ -205,34 +196,16 @@ export default function ProjectDetail() {
         </ul>
       </Section>
 
-      {isAnjarle && (
-        <>
-          <Section title="Amenities">
-            <div className="-mx-4 flex snap-x gap-2.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
-              {AMENITIES.map(([file, label]) => (
-                <button
-                  key={file}
-                  onClick={() => setViewer({ images: AMENITY_IMAGES, start: AMENITIES.findIndex(([f]) => f === file) })}
-                  className="relative h-36 w-44 shrink-0 snap-start overflow-hidden rounded-xl bg-site text-left"
-                  aria-label={`View ${label}`}
-                >
-                  <Image src={`/projects/anjarle/amenities/${file}.jpg`} alt={label} fill sizes="176px" className="object-cover" />
-                  <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2.5 pb-2 pt-6 text-[12px] font-medium text-white">
-                    {label}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </Section>
-          <Section title="Master plan">
-            <Card className="overflow-hidden">
-              <button onClick={() => setViewer({ images: [MASTER_PLAN], start: 0 })} className="relative block aspect-[4/3] w-full" aria-label="View the master plan">
-                <Image src={MASTER_PLAN.src} alt="Isle of Anjarle master plan" fill sizes="400px" className="object-cover" />
-              </button>
-              <p className="px-3.5 py-2.5 text-[12px] text-ink-soft">Master plan by Sanjay Puri Architects. Render, for illustration.</p>
-            </Card>
-          </Section>
-        </>
+      {amenities.length > 0 && (
+        <Section title="Amenities">
+          <Card className="divide-y divide-line">
+            {amenities.map((c) => (
+              <p key={c.text} className="px-3.5 py-2.5 text-[13px] leading-snug">
+                {c.text}
+              </p>
+            ))}
+          </Card>
+        </Section>
       )}
 
       <Section title="Paperwork and timeline">
@@ -250,28 +223,28 @@ export default function ProjectDetail() {
       </Section>
 
       {PROJECTS.length > 1 && (
-        <Section title="Other projects">
+        <Section title="Other projects you can book">
           <div className="flex flex-col gap-2.5">
-            {PROJECTS.filter((p) => p.id !== project.id).map((p) => (
+            {PROJECTS.filter((p) => p.id !== project.id && p.availability === "available").slice(0, 6).map((p) => (
               <button
                 key={p.id}
-                onClick={() => router.push(`/plots/${p.id}`)}
+                onClick={() => router.push(`/units/${p.id}`)}
                 className="flex items-center gap-3 rounded-2xl border border-line bg-card p-2.5 text-left active:bg-verd-soft"
               >
-                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-site">
+                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-[#173e62] to-[#07131f] text-site-ink">
                   {p.image ? (
                     <Image src={p.image} alt={p.name} fill sizes="56px" className="object-cover" />
                   ) : (
                     <>
-                      <Contours className="absolute inset-0 h-full w-full" opacity={0.25} />
-                      <PlotGrid className="absolute left-1/2 top-1/2 h-10 -translate-x-1/2 -translate-y-1/2" />
+                      <Skyline className="absolute inset-0 h-full w-full" opacity={0.25} />
+                      <UnitGrid className="absolute left-1/2 top-1/2 h-10 -translate-x-1/2 -translate-y-1/2" />
                     </>
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
                     <span className="truncate text-[14px] font-semibold">{p.name}</span>
-                    {p.illustrative && <span className="shrink-0 rounded bg-line px-1 py-px text-[9.5px] font-semibold uppercase tracking-wide text-ink-soft">Illustrative</span>}
+                    {p.illustrative && <span className="shrink-0 rounded bg-line px-1 py-px text-[9.5px] font-semibold uppercase tracking-wide text-ink-soft">Sample pricing</span>}
                   </div>
                   <p className="mt-0.5 flex items-center gap-1 truncate text-[12.5px] text-ink-soft">
                     <PinIcon className="h-3 w-3 shrink-0" />
@@ -285,9 +258,9 @@ export default function ProjectDetail() {
       )}
 
       <Disclosure>
-        Risk disclosure: land prices can fall as well as rise, and past appreciation doesn&rsquo;t predict future returns. Projections quoted
-        here come from third-party research and aren&rsquo;t guaranteed. Land is illiquid; plan to hold for {project.hold}. Check the
-        registration on the regulator&rsquo;s website before paying.
+        Risk disclosure: property values and rents can fall as well as rise, and past performance doesn&rsquo;t predict future results. Rental
+        income and resale value are not guaranteed, and property is a long-term, less liquid asset: plan to hold for {project.hold}. Confirm the
+        project&rsquo;s RERA registration before paying. Prices, layouts and dates shown here are sample data.
       </Disclosure>
 
       {/* Room for the avatar tile above the pinned buttons at the end of the page. */}
@@ -295,7 +268,7 @@ export default function ProjectDetail() {
 
       {/* Pinned to the bottom of the screen while scrolling; the avatar tile floats just above it. */}
       <div className="sticky bottom-0 z-10 grid grid-cols-2 gap-2 bg-paper/85 px-4 py-3 backdrop-blur">
-        <Button onClick={() => router.push(`/plots/${project.id}/map`)}>See the plot map</Button>
+        {soldOut ? <Button onClick={() => router.push("/units")}>See projects to book</Button> : <Button onClick={() => router.push(`/units/${project.id}/map`)}>See the unit map</Button>}
         <Button variant="secondary" onClick={() => {
             avatar.bargeIn();
             void requestHuman();
@@ -303,8 +276,6 @@ export default function ProjectDetail() {
           Ask the advisor
         </Button>
       </div>
-
-      {viewer && <Lightbox images={viewer.images} start={viewer.start} onClose={() => setViewer(null)} />}
     </div>
   );
 }

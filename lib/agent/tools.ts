@@ -6,23 +6,23 @@ import type { ChatCompletionFunctionTool } from "openai/resources/chat/completio
 import {
   PROJECTS,
   entryTicket,
-  findPlot,
-  getPlots,
+  findUnit,
+  getUnits,
   getProject,
-  type Plot,
-  type PlotOverrides,
+  type Unit,
+  type UnitOverrides,
   type Purpose,
 } from "@/lib/inventory";
 import { SITE_MAPS } from "@/lib/maps";
-import { INDICATIVE_RATE, TOKEN_AMOUNT, TOPICS, lookupKnowledge, type Topic } from "@/lib/knowledge";
+import { MAX_PLAN_MONTHS, MIN_PLAN_MONTHS, MONTHLY_PCT, TOKEN_AMOUNT, TOPICS, lookupKnowledge, type Topic } from "@/lib/knowledge";
 
-export const VIEWS = ["recommendations", "project", "location", "plots", "plot", "calculator", "booking", "kyc", "loan", "plan"] as const;
+export const VIEWS = ["recommendations", "project", "location", "units", "unit", "calculator", "booking", "kyc", "plan"] as const;
 export type View = (typeof VIEWS)[number];
 
-const PURPOSES: Purpose[] = ["investment", "holiday_home", "self_use", "rental_income", "commercial"];
+const PURPOSES: Purpose[] = ["investment", "holiday_home", "self_use", "rental_income", "golden_visa"];
 
 /** The demo always leads with this project, whatever the customer's answers. */
-export const FEATURED_PROJECT = "anjarle";
+export const FEATURED_PROJECT = "bayz102";
 
 const nullable = (schema: Record<string, unknown>) => ({ ...schema, type: [schema.type as string, "null"] });
 
@@ -41,48 +41,48 @@ function fn(name: string, description: string, properties: Record<string, unknow
 export const TOOL_DEFINITIONS: ChatCompletionFunctionTool[] = [
   fn(
     "search_projects",
-    "Rank the projects against the customer's profile. Call once purpose, budget and one more field are known. Returns entry ticket, rate, available plots, a fit score and a fit reason for each project.",
+    "Rank the projects against the customer's profile. Call once purpose, budget and one more field are known. Returns entry ticket, rate, available units, a fit score and a fit reason for each project.",
     {
-      budget_max: nullable({ type: "number", description: "Maximum budget in rupees, e.g. 5000000 for 50 lakh." }),
+      budget_max: nullable({ type: "number", description: "Maximum budget in AED, e.g. 1500000 for AED 1.5 million." }),
       purpose: nullable({ type: "string", enum: PURPOSES }),
-      region: nullable({ type: "string", description: "Place or region in the customer's words, e.g. 'near Mumbai', 'Goa', 'coastal'." }),
+      region: nullable({ type: "string", description: "Place or region in the customer's words, e.g. 'in Marina', 'Business Bay', 'near the metro'." }),
       horizon_years: nullable({ type: "number", description: "How many years the customer plans to hold." }),
     },
   ),
   fn(
-    "list_plots",
-    "List available plots in one project, filtered and sorted. Use for size, price or location questions such as 'closest to the entrance'. Sizes are fixed configurations, so a single size like 2000 matches plots within 10% of it. Returns up to 20 plots and the total that matched.",
+    "list_units",
+    "List available units in one project, filtered and sorted. Use for size, price, bedroom or floor questions such as 'the highest floor'. Sizes are fixed configurations, so a single size like 2000 matches units within 10% of it. Returns up to 20 units and the total that matched.",
     {
       project_id: { type: "string", enum: PROJECTS.map((p) => p.id) },
       min_size: nullable({ type: "number", description: "Minimum size in sq ft." }),
       max_size: nullable({ type: "number", description: "Maximum size in sq ft." }),
-      max_price: nullable({ type: "number", description: "Maximum price in rupees." }),
-      sort: nullable({ type: "string", enum: ["price", "size", "distance_from_entrance"] }),
+      max_price: nullable({ type: "number", description: "Maximum price in AED." }),
+      sort: nullable({ type: "string", enum: ["price", "size", "floor"] }),
     },
   ),
   fn(
-    "find_adjacent_plots",
-    "Find groups of plots that sit next to each other, all available. Use whenever the customer wants several plots together, side by side, adjacent or neighbouring (e.g. 'I want 3 plots next to each other'). NEVER build such a group from list_plots: plot numbers close in value are not always neighbours. Returns groups of exactly `count` plots, side-by-side groups first, then cheapest.",
+    "find_adjacent_units",
+    "Find groups of units that sit next to each other, all available. Use whenever the customer wants several units together, side by side, adjacent or neighbouring (e.g. 'I want 3 units next to each other'). NEVER build such a group from list_units: unit numbers close in value are not always neighbours. Returns groups of exactly `count` units, side-by-side groups first, then cheapest.",
     {
       project_id: { type: "string", enum: PROJECTS.map((p) => p.id) },
-      count: { type: "number", description: "How many plots the customer wants together, 2 or more." },
-      min_size: nullable({ type: "number", description: "Minimum size in sq ft for each plot." }),
-      max_size: nullable({ type: "number", description: "Maximum size in sq ft for each plot." }),
-      max_total_price: nullable({ type: "number", description: "Maximum combined price in rupees." }),
+      count: { type: "number", description: "How many units the customer wants together, 2 or more." },
+      min_size: nullable({ type: "number", description: "Minimum size in sq ft for each unit." }),
+      max_size: nullable({ type: "number", description: "Maximum size in sq ft for each unit." }),
+      max_total_price: nullable({ type: "number", description: "Maximum combined price in AED." }),
     },
   ),
   fn(
-    "compare_plots",
-    "Compare two or three specific plots side by side. Use whenever the customer asks to compare, or which plot is better, or A versus B. Returns each plot's facts (price, size, rate per sq ft, facing, road width, distance from the entrance, corner, park-facing, status) and the worked-out differences between them.",
+    "compare_units",
+    "Compare two or three specific units side by side. Use whenever the customer asks to compare, or which unit is better, or A versus B. Returns each unit's facts (price, size, bedrooms, rate per sq ft, floor, view, corner, premium view, status) and the worked-out differences between them.",
     {
-      plot_a: { type: "string", description: "Plot id or plot number, e.g. IA-07." },
-      plot_b: { type: "string", description: "Plot id or plot number." },
-      plot_c: nullable({ type: "string", description: "Optional third plot id or number." }),
+      unit_a: { type: "string", description: "Unit id or unit number, e.g. GZ-0302." },
+      unit_b: { type: "string", description: "Unit id or unit number." },
+      unit_c: nullable({ type: "string", description: "Optional third unit id or number." }),
     },
   ),
   fn(
     "get_knowledge",
-    "Look up approved facts: a project topic (connectivity with distances in km, location for geography/travel routes/nearby places, payment_plan, booking_policy, title_approvals, timeline, amenities, infrastructure, developer, market) or an objection playbook (why_here, price, consult_spouse, asset_class, finance, stall). Always use this before stating a policy, date, approval or figure.",
+    "Look up approved facts: a project topic (connectivity with travel times in minutes, location for geography/travel routes/nearby places, payment_plan, booking_policy, title_approvals, timeline, amenities, infrastructure, developer, market) or an objection playbook (why_here, price, consult_spouse, asset_class, finance, stall). Always use this before stating a policy, date, approval or figure.",
     {
       project_id: nullable({ type: "string", enum: PROJECTS.map((p) => p.id), description: "null returns the topic for all projects, for comparisons." }),
       topic: { type: "string", enum: [...TOPICS] },
@@ -90,42 +90,41 @@ export const TOOL_DEFINITIONS: ChatCompletionFunctionTool[] = [
   ),
   fn(
     "calculate_payment",
-    "Work out the down payment, loan amount, monthly EMI and total interest for a plot price. Figures are indicative and in-principle.",
+    "Work out Danube's 1% payment plan for a unit price: the down payment, the 1% monthly instalment, how many instalments, and the balance due on completion. About 20% down, then 1% of the price a month during construction, then the balance when the building is ready. Figures exclude government fees.",
     {
-      price: { type: "number", description: "Plot price in rupees." },
-      down_payment_pct: { type: "number", description: "Down payment as a percent, 0 to 100." },
-      annual_rate: nullable({ type: "number", description: "Annual rate as a percent. Pass null unless the customer named a rate; null uses the indicative partner-bank rate." }),
-      tenure_years: { type: "number" },
+      price: { type: "number", description: "Unit price in AED." },
+      down_payment_pct: { type: "number", description: "Down payment as a percent of the price. Use 20 unless the customer asks for another figure." },
+      months: { type: "number", description: "Number of 1% monthly instalments, from 12 to 80, normally the months until handover. Greenz uses 40." },
     },
   ),
   fn(
     "show",
-    "Change the customer's screen. Call right after recommending (view 'recommendations'), when discussing one project ('project' or 'plots' with the project id), when the customer asks where the site is or wants to visit it ('location' with the project id: opens the project page scrolled to its embedded map), one plot ('plot' with the plot id), money ('calculator'), or when moving to booking, KYC or loan.",
+    "Change the customer's screen. Call right after recommending (view 'recommendations'), when discussing one project ('project' or 'units' with the project id), when the customer asks where the site is or wants to visit it ('location' with the project id: opens the project page scrolled to its embedded map), one unit ('unit' with the unit id), money ('calculator'), or when moving to booking, KYC or the payment schedule.",
     {
       view: { type: "string", enum: [...VIEWS] },
-      id: nullable({ type: "string", description: "Project id for project/location/plots, plot id or plot number for plot/calculator/booking." }),
+      id: nullable({ type: "string", description: "Project id for project/location/units, unit id or unit number for unit/calculator/booking." }),
     },
   ),
   fn(
     "create_booking",
-    "Create an initiated booking for one plot. Takes no payment: the customer confirms the ₹45,000 token on the payment screen. Only call after the customer has clearly said they want to book that plot.",
-    { plot_id: { type: "string", description: "Plot id or plot number, e.g. IA-07." } },
+    "Create an initiated booking for one unit. Takes no payment: the customer confirms the AED 20,000 token on the payment screen. Only call after the customer has clearly said they want to book that unit.",
+    { unit_id: { type: "string", description: "Unit id or unit number, e.g. GZ-0302." } },
   ),
 ];
 
 export type ToolName =
   | "search_projects"
-  | "list_plots"
-  | "find_adjacent_plots"
-  | "compare_plots"
+  | "list_units"
+  | "find_adjacent_units"
+  | "compare_units"
   | "get_knowledge"
   | "calculate_payment"
   | "show"
   | "create_booking";
 
 export interface ToolContext {
-  overrides?: PlotOverrides;
-  /** Where the customer stands in the booking journey: token, then KYC, then loan. */
+  overrides?: UnitOverrides;
+  /** Where the customer stands in the booking journey: token, then KYC, then the payment schedule. */
   flow?: { paid: boolean; kyc: boolean };
 }
 
@@ -143,7 +142,7 @@ const project0Hook = (id: string) => getProject(id)?.hook;
 export function searchProjects(args: SearchProjectsArgs, ctx: ToolContext = {}) {
   const region = args.region?.toLowerCase() ?? "";
   const projects = PROJECTS.map((project) => {
-    const available = getPlots(project.id, ctx.overrides).filter((p) => p.status === "available");
+    const available = getUnits(project.id, ctx.overrides).filter((p) => p.status === "available");
     const inBudget = args.budget_max ? available.filter((p) => p.price <= args.budget_max!) : available;
     const reasons: string[] = [];
     let score = 20;
@@ -151,10 +150,10 @@ export function searchProjects(args: SearchProjectsArgs, ctx: ToolContext = {}) 
     if (args.budget_max) {
       if (inBudget.length > 0) {
         score += 40;
-        reasons.push(`${inBudget.length} available plots within budget`);
+        reasons.push(`${inBudget.length} available units within budget`);
       } else {
         score -= 20;
-        reasons.push("no available plots within budget");
+        reasons.push("no available units within budget");
       }
     }
     if (args.purpose) {
@@ -183,19 +182,31 @@ export function searchProjects(args: SearchProjectsArgs, ctx: ToolContext = {}) 
       }
     }
 
+    // Nothing to book in a completed or sold-out project: say so and rank it last.
+    const soldOut = project.availability === "sold_out";
+    if (soldOut) {
+      score = Math.min(score, 10);
+      reasons.length = 0;
+      reasons.push(project.status === "completed" ? "completed and sold out" : "sold out");
+    }
+
     return {
       id: project.id,
       name: project.name,
       location: project.location,
+      status: project.status,
+      sold_out: soldOut,
+      handover: project.handover,
       illustrative: project.illustrative,
       entry_ticket: entryTicket(project),
       rate_per_sqft: project.ratePerSqft,
-      cagr_range: project.cagr,
+      outlook: project.outlook,
       hold: project.hold,
-      available_plots: available.length,
+      available_units: available.length,
       available_in_budget: inBudget.length,
       cheapest_in_budget: inBudget.length ? Math.min(...inBudget.map((p) => p.price)) : null,
-      fit_score: Math.max(0, Math.min(100, score)),
+      // Projects that can be booked always rank above sold-out ones, whatever the area.
+      fit_score: Math.max(soldOut ? 0 : 11, Math.min(100, score)),
       fit_reason: reasons.join("; ") || project.hook,
       hook: project.hook,
       featured: project.id === FEATURED_PROJECT,
@@ -211,51 +222,54 @@ export function searchProjects(args: SearchProjectsArgs, ctx: ToolContext = {}) 
     // Nothing below the top pick may out-score it.
     for (const p of projects) if (!p.featured) p.fit_score = Math.min(p.fit_score, featured.fit_score - 6);
     featured.fit_reason = [
-      "featured HoABL project",
-      ...featured.fit_reason.split("; ").filter((r) => r && r !== project0Hook(featured.id) && r !== "no available plots within budget"),
+      "featured Danube project",
+      ...featured.fit_reason.split("; ").filter((r) => r && r !== project0Hook(featured.id) && r !== "no available units within budget"),
     ].join("; ");
     if (featured.available_in_budget === 0 && args.budget_max) {
-      featured.fit_reason += "; above budget, instalment plan and up to 50% financing available";
+      featured.fit_reason += "; above budget, the 1% monthly payment plan spreads the cost";
     }
     projects.splice(projects.indexOf(featured), 1);
     projects.unshift(featured);
   }
 
-  return { projects };
+  // The best eight; sold-out projects rank last, so they only show when little else fits.
+  return { projects: projects.slice(0, 8), total_projects: projects.length, available_projects: projects.filter((p) => !p.sold_out).length };
 }
 
-export interface ListPlotsArgs {
+export interface ListUnitsArgs {
   project_id: string;
   min_size: number | null;
   max_size: number | null;
   max_price: number | null;
-  sort: "price" | "size" | "distance_from_entrance" | null;
+  sort: "price" | "size" | "floor" | null;
 }
 
-function plotSummary(p: Plot) {
+function unitSummary(p: Unit) {
   return {
     id: p.id,
-    plot_no: p.plotNo,
+    unit_no: p.unitNo,
     size_sqft: p.sizeSqft,
     price: p.price,
-    facing: p.facing,
-    road_width_m: p.roadWidthM,
-    metres_from_entrance: p.metresFromEntrance,
+    layout: p.layout,
+    floor: p.floor,
+    view: p.view,
     is_corner: p.isCorner,
-    is_park_facing: p.isParkFacing,
+    is_premium_view: p.isPremiumView,
     status: p.status,
   };
 }
 
-export function listPlots(args: ListPlotsArgs, ctx: ToolContext = {}) {
-  if (!getProject(args.project_id)) return { error: `unknown project ${args.project_id}`, plots: [], total: 0 };
+export function listUnits(args: ListUnitsArgs, ctx: ToolContext = {}) {
+  const project = getProject(args.project_id);
+  if (!project) return { error: `unknown project ${args.project_id}`, units: [], total: 0 };
+  if (project.availability === "sold_out") return { units: [], total: 0, note: `${project.name} is sold out, so it has no units to book` };
   let { min_size: min, max_size: max } = args;
   // "the 2,000 sq ft options" means the nearest configuration, not exactly 2,000.
   if (min != null && max != null && max - min < min * 0.1) {
     const mid = (min + max) / 2;
     [min, max] = [mid * 0.9, mid * 1.1];
   }
-  const matches = getPlots(args.project_id, ctx.overrides).filter(
+  const matches = getUnits(args.project_id, ctx.overrides).filter(
     (p) =>
       p.status === "available" &&
       (min == null || p.sizeSqft >= min) &&
@@ -264,12 +278,12 @@ export function listPlots(args: ListPlotsArgs, ctx: ToolContext = {}) {
   );
   const key = args.sort ?? "price";
   const sorted = [...matches].sort((a, b) =>
-    key === "size" ? a.sizeSqft - b.sizeSqft : key === "distance_from_entrance" ? a.metresFromEntrance - b.metresFromEntrance : a.price - b.price,
+    key === "size" ? a.sizeSqft - b.sizeSqft : key === "floor" ? b.floor - a.floor : a.price - b.price,
   );
-  return { plots: sorted.slice(0, 20).map(plotSummary), total: matches.length };
+  return { units: sorted.slice(0, 20).map(unitSummary), total: matches.length };
 }
 
-export interface FindAdjacentPlotsArgs {
+export interface FindAdjacentUnitsArgs {
   project_id: string;
   count: number;
   min_size: number | null;
@@ -278,30 +292,31 @@ export interface FindAdjacentPlotsArgs {
 }
 
 /**
- * Groups of `count` available plots that touch on the layout grid (sharing an
- * edge). Plot numbers run row by row, so IA-02, IA-03, IA-04 are neighbours
- * while IA-14 and IA-19 are not.
+ * Groups of `count` available units that touch on the layout grid (sharing an
+ * edge). Units on the same floor sit side by side, and units directly above one
+ * another count as touching, so GZ-0301 and GZ-0302 are neighbours while
+ * GZ-0301 and GZ-0904 are not.
  */
-export function findAdjacentPlots(args: FindAdjacentPlotsArgs, ctx: ToolContext = {}) {
+export function findAdjacentUnits(args: FindAdjacentUnitsArgs, ctx: ToolContext = {}) {
   const project = getProject(args.project_id);
   if (!project) return { error: `unknown project ${args.project_id}`, groups: [], total: 0 };
   const count = Math.round(args.count);
   if (!(count >= 2) || count > 6) return { error: "count must be between 2 and 6", groups: [], total: 0 };
 
-  const pool = getPlots(args.project_id, ctx.overrides).filter(
+  const pool = getUnits(args.project_id, ctx.overrides).filter(
     (p) =>
       p.status === "available" &&
       (args.min_size == null || p.sizeSqft >= args.min_size) &&
       (args.max_size == null || p.sizeSqft <= args.max_size),
   );
   const at = new Map(pool.map((p) => [`${p.gridRow},${p.gridCol}`, p]));
-  const neighbours = (p: Plot) =>
+  const neighbours = (p: Unit) =>
     [[0, 1], [0, -1], [1, 0], [-1, 0]].flatMap(([dr, dc]) => at.get(`${p.gridRow + dr},${p.gridCol + dc}`) ?? []);
 
-  // Every connected set of `count` plots, de-duplicated by plot ids.
+  // Every connected set of `count` units, de-duplicated by unit ids.
   const seen = new Set<string>();
-  const sets: Plot[][] = [];
-  const grow = (group: Plot[]) => {
+  const sets: Unit[][] = [];
+  const grow = (group: Unit[]) => {
     const key = group.map((p) => p.id).sort().join("|");
     if (seen.has(key)) return;
     seen.add(key);
@@ -312,14 +327,14 @@ export function findAdjacentPlots(args: FindAdjacentPlotsArgs, ctx: ToolContext 
 
   const groups = sets
     .map((g) => {
-      const plots = [...g].sort((a, b) => a.gridRow - b.gridRow || a.gridCol - b.gridCol);
-      const row = plots.every((p) => p.gridRow === plots[0].gridRow);
-      const unbroken = row && plots.every((p, i) => i === 0 || p.gridCol === plots[i - 1].gridCol + 1);
+      const units = [...g].sort((a, b) => a.gridRow - b.gridRow || a.gridCol - b.gridCol);
+      const row = units.every((p) => p.gridRow === units[0].gridRow);
+      const unbroken = row && units.every((p, i) => i === 0 || p.gridCol === units[i - 1].gridCol + 1);
       return {
-        plots: plots.map(plotSummary),
+        units: units.map(unitSummary),
         layout: unbroken ? "side by side in one row" : "connected, across rows",
-        total_price: plots.reduce((sum, p) => sum + p.price, 0),
-        total_size_sqft: plots.reduce((sum, p) => sum + p.sizeSqft, 0),
+        total_price: units.reduce((sum, p) => sum + p.price, 0),
+        total_size_sqft: units.reduce((sum, p) => sum + p.sizeSqft, 0),
         _unbroken: unbroken,
       };
     })
@@ -329,26 +344,26 @@ export function findAdjacentPlots(args: FindAdjacentPlotsArgs, ctx: ToolContext 
   return { groups: groups.slice(0, 5).map(({ _unbroken, ...g }) => g), total: groups.length };
 }
 
-export interface ComparePlotsArgs {
-  plot_a: string;
-  plot_b: string;
-  plot_c: string | null;
+export interface CompareUnitsArgs {
+  unit_a: string;
+  unit_b: string;
+  unit_c: string | null;
 }
 
 /**
- * Side-by-side facts for two or three plots, with the differences worked out,
- * so the advisor can say what each plot gives up and gains rather than reading
+ * Side-by-side facts for two or three units, with the differences worked out,
+ * so the advisor can say what each unit gives up and gains rather than reading
  * out two rows of specs.
  */
-export function comparePlots(args: ComparePlotsArgs, ctx: ToolContext = {}) {
-  const refs = [args.plot_a, args.plot_b, args.plot_c].filter((r): r is string => Boolean(r));
-  const plots = refs.map((r) => findPlot(r, ctx.overrides));
-  const missing = refs.filter((_, i) => !plots[i]);
-  if (missing.length) return { error: `no plot ${missing.join(", ")}` };
-  const found = plots as Plot[];
+export function compareUnits(args: CompareUnitsArgs, ctx: ToolContext = {}) {
+  const refs = [args.unit_a, args.unit_b, args.unit_c].filter((r): r is string => Boolean(r));
+  const units = refs.map((r) => findUnit(r, ctx.overrides));
+  const missing = refs.filter((_, i) => !units[i]);
+  if (missing.length) return { error: `no unit ${missing.join(", ")}` };
+  const found = units as Unit[];
 
   const rows = found.map((p) => ({
-    ...plotSummary(p),
+    ...unitSummary(p),
     project_name: getProject(p.projectId)?.name ?? p.projectId,
     price_per_sqft: Math.round(p.price / p.sizeSqft),
   }));
@@ -357,7 +372,7 @@ export function comparePlots(args: ComparePlotsArgs, ctx: ToolContext = {}) {
     const vals = rows.map(pick) as unknown as number[];
     const target = better === "min" ? Math.min(...vals) : Math.max(...vals);
     const winners = rows.filter((_, i) => vals[i] === target);
-    return winners.length === rows.length ? null : winners.map((r) => r.plot_no);
+    return winners.length === rows.length ? null : winners.map((r) => r.unit_no);
   };
   const spread = (pick: (r: (typeof rows)[number]) => number) => {
     const v = rows.map(pick);
@@ -366,20 +381,21 @@ export function comparePlots(args: ComparePlotsArgs, ctx: ToolContext = {}) {
 
   const differences: string[] = [];
   const note = (label: string, winners: string[] | null, detail: string) => winners && differences.push(`${label}: ${winners.join(" and ")} ${detail}`);
-  note("Price", by((r) => r.price, "min"), `is the lowest, by up to ₹${spread((r) => r.price)} across these`);
+  note("Price", by((r) => r.price, "min"), `is the lowest, by up to AED ${spread((r) => r.price)} across these`);
   note("Size", by((r) => r.size_sqft, "max"), `is the largest, by up to ${spread((r) => r.size_sqft)} sq ft`);
-  note("Rate", by((r) => r.price_per_sqft, "min"), `has the lowest rate per sq ft, up to ₹${spread((r) => r.price_per_sqft)} less`);
-  note("Entrance", by((r) => r.metres_from_entrance, "min"), `is closest to the entrance, by up to ${spread((r) => r.metres_from_entrance)} m`);
-  note("Road", by((r) => r.road_width_m, "max"), `has the widest access road, up to ${spread((r) => r.road_width_m)} m wider`);
-  const corner = rows.filter((r) => r.is_corner).map((r) => r.plot_no);
-  if (corner.length && corner.length < rows.length) differences.push(`Position: ${corner.join(" and ")} ${corner.length > 1 ? "are corner plots" : "is a corner plot"}, the rest are not`);
-  const park = rows.filter((r) => r.is_park_facing).map((r) => r.plot_no);
-  if (park.length && park.length < rows.length) differences.push(`View: ${park.join(" and ")} ${park.length > 1 ? "face" : "faces"} the park, the rest do not`);
-  const taken = rows.filter((r) => r.status !== "available").map((r) => `${r.plot_no} is ${r.status}`);
+  note("Rate", by((r) => r.price_per_sqft, "min"), `has the lowest rate per sq ft, up to AED ${spread((r) => r.price_per_sqft)} less`);
+  if (!found.some((u) => getProject(u.projectId)?.community)) {
+    note("Floor", by((r) => r.floor, "max"), `is on the highest floor, by up to ${spread((r) => r.floor)} floors`);
+  }
+  const corner = rows.filter((r) => r.is_corner).map((r) => r.unit_no);
+  if (corner.length && corner.length < rows.length) differences.push(`Position: ${corner.join(" and ")} ${corner.length > 1 ? "are corner units" : "is a corner unit"}, the rest are not`);
+  const premium = rows.filter((r) => r.is_premium_view).map((r) => r.unit_no);
+  if (premium.length && premium.length < rows.length) differences.push(`View: ${premium.join(" and ")} ${premium.length > 1 ? "have" : "has"} the project's premium view, the rest do not`);
+  const taken = rows.filter((r) => r.status !== "available").map((r) => `${r.unit_no} is ${r.status}`);
   if (taken.length) differences.push(`Availability: ${taken.join(", ")}`);
 
   return {
-    plots: rows,
+    units: rows,
     differences,
     same_project: new Set(found.map((p) => p.projectId)).size === 1,
   };
@@ -398,32 +414,34 @@ export function getKnowledge(args: GetKnowledgeArgs) {
 export interface CalculatePaymentArgs {
   price: number;
   down_payment_pct: number;
-  annual_rate: number | null;
-  tenure_years: number;
+  months: number;
 }
 
-export function emi(principal: number, annualRatePct: number, tenureYears: number): number {
-  const n = Math.round(tenureYears * 12);
-  if (principal <= 0 || n <= 0) return 0;
-  const r = annualRatePct / 12 / 100;
-  if (r === 0) return principal / n;
-  return (principal * r * (1 + r) ** n) / ((1 + r) ** n - 1);
-}
-
+/**
+ * Danube's 1% plan: a down payment (the token counts toward it), then 1% of
+ * the price every month while the building is built, then the balance when it
+ * is ready. No interest. The number of instalments can't push the total past
+ * the price.
+ */
 export function calculatePayment(args: CalculatePaymentArgs) {
   const pct = Math.min(100, Math.max(0, args.down_payment_pct));
+  const maxMonths = Math.min(MAX_PLAN_MONTHS, Math.floor((100 - pct) / MONTHLY_PCT));
+  const months = Math.max(Math.min(MIN_PLAN_MONTHS, maxMonths), Math.min(maxMonths, Math.round(args.months)));
   const down = Math.round((args.price * pct) / 100);
-  const loan = args.price - down;
-  const rate = args.annual_rate ?? INDICATIVE_RATE;
-  const monthly = Math.round(emi(loan, rate, args.tenure_years));
-  const totalInterest = Math.max(0, monthly * Math.round(args.tenure_years * 12) - loan);
+  const monthly = Math.round((args.price * MONTHLY_PCT) / 100);
+  const completion = Math.max(0, args.price - down - monthly * months);
   return {
     down_payment: down,
-    loan_amount: loan,
-    emi: monthly,
-    total_interest: totalInterest,
-    annual_rate: rate,
-    rate_basis: args.annual_rate == null ? "indicative partner-bank rate, in-principle" : "rate given by customer",
+    balance_of_down_payment: Math.max(0, down - TOKEN_AMOUNT),
+    token_amount: TOKEN_AMOUNT,
+    months,
+    monthly_instalment: monthly,
+    monthly_pct_of_price: MONTHLY_PCT,
+    total_monthly_payments: monthly * months,
+    balance_on_completion: completion,
+    completion_pct_of_price: Math.round((completion / args.price) * 10000) / 100,
+    interest: 0,
+    fees_note: "Excludes government fees such as the Dubai Land Department registration fee.",
   };
 }
 
@@ -435,19 +453,20 @@ export interface ShowArgs {
 export function show(args: ShowArgs, ctx: ToolContext = {}) {
   if (!VIEWS.includes(args.view)) return { ok: false, error: `unknown view ${args.view}` };
   if (args.view === "location") {
-    if (!args.id || !SITE_MAPS[args.id]) return { ok: false, error: "view location needs the id of a project that has a site map (only isle of anjarle does)" };
+    if (!args.id || !SITE_MAPS[args.id]) return { ok: false, error: "view location needs a valid project id" };
     return { ok: true, view: args.view, id: args.id };
   }
-  if (args.view === "project" || args.view === "plots") {
+  if (args.view === "project" || args.view === "units") {
     if (!args.id || !getProject(args.id)) return { ok: false, error: `view ${args.view} needs a valid project id` };
+    if (args.view === "units" && getProject(args.id)?.availability === "sold_out") return { ok: false, error: `${getProject(args.id)!.name} is sold out, so it has no unit map. Show a project that still has units, or the project page.` };
     return { ok: true, view: args.view, id: args.id };
   }
-  if (args.view === "plot") {
-    const plot = args.id ? findPlot(args.id, ctx.overrides) : undefined;
-    if (!plot) return { ok: false, error: "view plot needs a valid plot id or plot number" };
-    return { ok: true, view: args.view, id: plot.id };
+  if (args.view === "unit") {
+    const unit = args.id ? findUnit(args.id, ctx.overrides) : undefined;
+    if (!unit) return { ok: false, error: "view unit needs a valid unit id or unit number" };
+    return { ok: true, view: args.view, id: unit.id };
   }
-  // The booking journey runs in order: token payment, KYC, then the loan check.
+  // The booking journey runs in order: token payment, KYC, then the payment schedule.
   if (ctx.flow) {
     if (args.view === "plan" && !ctx.flow.paid) {
       return { ok: false, error: "The payment plan opens after the token payment and KYC. Tell the customer to pay the token on the booking screen first." };
@@ -456,32 +475,26 @@ export function show(args: ShowArgs, ctx: ToolContext = {}) {
       return { ok: false, error: "The payment plan opens after KYC. Tell the customer to complete KYC first; do not open the plan yet." };
     }
     if (args.view === "kyc" && !ctx.flow.paid) {
-      return { ok: false, error: "KYC comes after the token payment. Tell the customer to pay the token on the booking screen first; do not open KYC or loan yet." };
-    }
-    if (args.view === "loan" && !ctx.flow.paid) {
-      return { ok: false, error: "The loan check comes after the token payment and KYC. Tell the customer to pay the token on the booking screen first." };
-    }
-    if (args.view === "loan" && !ctx.flow.kyc) {
-      return { ok: false, error: "The loan check comes after KYC. Tell the customer to complete KYC first; do not open loan yet." };
+      return { ok: false, error: "KYC comes after the token payment. Tell the customer to pay the token on the booking screen first; do not open KYC yet." };
     }
   }
-  // Other views take an optional plot for context.
-  const plot = args.id ? findPlot(args.id, ctx.overrides) : undefined;
-  return { ok: true, view: args.view, id: plot?.id ?? null };
+  // Other views take an optional unit for context.
+  const unit = args.id ? findUnit(args.id, ctx.overrides) : undefined;
+  return { ok: true, view: args.view, id: unit?.id ?? null };
 }
 
 export interface CreateBookingArgs {
-  plot_id: string;
+  unit_id: string;
 }
 
 export function createBooking(args: CreateBookingArgs, ctx: ToolContext = {}) {
-  const plot = findPlot(args.plot_id, ctx.overrides);
-  if (!plot) return { error: `no plot ${args.plot_id}` };
-  if (plot.status !== "available") return { error: `${plot.plotNo} is ${plot.status}, not available` };
-  const project = getProject(plot.projectId)!;
+  const unit = findUnit(args.unit_id, ctx.overrides);
+  if (!unit) return { error: `no unit ${args.unit_id}` };
+  if (unit.status !== "available") return { error: `${unit.unitNo} is ${unit.status}, not available` };
+  const project = getProject(unit.projectId)!;
   return {
-    booking_id: `BK-${plot.plotNo}-${Date.now().toString(36).toUpperCase().slice(-5)}`,
-    plot: { ...plotSummary(plot), project_id: project.id, project_name: project.name },
+    booking_id: `BK-${unit.unitNo}-${Date.now().toString(36).toUpperCase().slice(-5)}`,
+    unit: { ...unitSummary(unit), project_id: project.id, project_name: project.name },
     token_amount: TOKEN_AMOUNT,
     status: "initiated" as const,
   };
@@ -493,12 +506,12 @@ export function runTool(name: string, args: unknown, ctx: ToolContext = {}): unk
   switch (name as ToolName) {
     case "search_projects":
       return searchProjects(args as SearchProjectsArgs, ctx);
-    case "list_plots":
-      return listPlots(args as ListPlotsArgs, ctx);
-    case "find_adjacent_plots":
-      return findAdjacentPlots(args as FindAdjacentPlotsArgs, ctx);
-    case "compare_plots":
-      return comparePlots(args as ComparePlotsArgs, ctx);
+    case "list_units":
+      return listUnits(args as ListUnitsArgs, ctx);
+    case "find_adjacent_units":
+      return findAdjacentUnits(args as FindAdjacentUnitsArgs, ctx);
+    case "compare_units":
+      return compareUnits(args as CompareUnitsArgs, ctx);
     case "get_knowledge":
       return getKnowledge(args as GetKnowledgeArgs);
     case "calculate_payment":
@@ -512,7 +525,7 @@ export function runTool(name: string, args: unknown, ctx: ToolContext = {}): unk
   }
 }
 
-/** Short label for the tool pill, e.g. "checking availability · 9 plots in range". */
+/** Short label for the tool pill, e.g. "checking availability · 9 units in range". */
 export function toolPill(name: string, result: unknown): string {
   const r = result as Record<string, unknown>;
   if (r && typeof r === "object" && "error" in r) return `${name} · ${r.error}`;
@@ -521,20 +534,20 @@ export function toolPill(name: string, result: unknown): string {
       const projects = (r.projects as { fit_score: number }[]) ?? [];
       return `matching projects · ${projects.filter((p) => p.fit_score >= 75).length} strong fits`;
     }
-    case "list_plots":
-      return `checking availability · ${r.total} plots in range`;
-    case "find_adjacent_plots":
-      return `checking neighbouring plots · ${r.total} groups found`;
-    case "compare_plots":
-      return `comparing plots · ${(r.plots as unknown[]).length} side by side`;
+    case "list_units":
+      return `checking availability · ${r.total} units in range`;
+    case "find_adjacent_units":
+      return `checking neighbouring units · ${r.total} groups found`;
+    case "compare_units":
+      return `comparing units · ${(r.units as unknown[]).length} side by side`;
     case "get_knowledge":
       return `looking up policy · ${(r.chunks as unknown[]).length} notes`;
     case "calculate_payment":
-      return `working out EMI · ₹${Number(r.emi).toLocaleString("en-IN")}/mo`;
+      return `working out plan · AED ${Number(r.monthly_instalment).toLocaleString("en-US")}/mo`;
     case "show":
       return r.ok ? `opening ${r.view}` : `show failed`;
     case "create_booking":
-      return `holding plot · ${(r.plot as { plot_no: string }).plot_no}`;
+      return `holding unit · ${(r.unit as { unit_no: string }).unit_no}`;
     default:
       return name;
   }

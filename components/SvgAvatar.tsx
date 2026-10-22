@@ -2,19 +2,19 @@
 // position as the live video, so a dropped stream reads as a bad connection
 // rather than a broken app. The mouth animates while speech is playing.
 
-import { Contours } from "@/components/Contours";
+import { Skyline } from "@/components/Skyline";
 
 export function SvgAvatar({ speaking, compact = false }: { speaking: boolean; compact?: boolean }) {
   return (
     <div className={`relative h-full w-full overflow-hidden bg-site text-site-ink ${speaking ? "speaking" : ""}`}>
-      <Contours className="absolute inset-0 h-full w-full" opacity={0.22} />
-      <svg viewBox="0 0 300 360" className="absolute inset-x-0 bottom-0 mx-auto h-[92%]" role="img" aria-label="Land Advisor">
+      <Skyline className="absolute inset-0 h-full w-full" opacity={0.22} />
+      <svg viewBox="0 0 300 360" className="absolute inset-x-0 bottom-0 mx-auto h-[92%]" role="img" aria-label="Property Advisor">
         <g className="svg-body">
           {/* shoulders and blazer */}
-          <path d="M40 360 C44 290 92 262 150 262 C208 262 256 290 260 360 Z" fill="#3a1c6b" />
+          <path d="M40 360 C44 290 92 262 150 262 C208 262 256 290 260 360 Z" fill="#173e62" />
           <path d="M150 262 L126 300 L150 360 L174 300 Z" fill="#E6EDE9" />
-          <path d="M150 272 L140 292 L150 330 L160 292 Z" fill="#A8761A" />
-          <path d="M112 270 L150 262 L130 318 Z M188 270 L150 262 L170 318 Z" fill="#261247" />
+          <path d="M150 272 L140 292 L150 330 L160 292 Z" fill="#BDA588" />
+          <path d="M112 270 L150 262 L130 318 Z M188 270 L150 262 L170 318 Z" fill="#0d2740" />
           {/* neck */}
           <path d="M132 214 L132 262 C140 272 160 272 168 262 L168 214 Z" fill="#A5704D" />
           {/* head */}

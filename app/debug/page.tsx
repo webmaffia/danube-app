@@ -50,14 +50,14 @@ export default function AgentPage() {
           if (t.kind === "agent") return <p key={i}><b>Advisor:</b> {t.text}</p>;
           if (!showPills) return null;
           if (t.kind === "tool") return <p key={i} style={{ color: "#666" }}>⚙ {t.tool.pill ?? `${t.tool.name}…`}</p>;
-          if (t.kind === "event") return <p key={i} style={{ color: "#125E52" }}>● {t.label}</p>;
+          if (t.kind === "event") return <p key={i} style={{ color: "#3b82c4" }}>● {t.label}</p>;
           if (t.kind === "handoff")
             return (
-              <p key={i} style={{ color: "#125E52" }}>
+              <p key={i} style={{ color: "#3b82c4" }}>
                 ☎ handoff → {t.items.filter((it) => it.done).map((it) => it.label).join(", ") || "no context yet"}
               </p>
             );
-          return <p key={i} style={{ color: "#125E52" }}>▣ screen → {t.view}{t.id ? ` (${t.id})` : ""}</p>;
+          return <p key={i} style={{ color: "#3b82c4" }}>▣ screen → {t.view}{t.id ? ` (${t.id})` : ""}</p>;
         })}
         {busy && <p style={{ color: "#666" }}>…</p>}
         {error && <p style={{ color: "crimson" }}>Error: {error}</p>}
@@ -76,7 +76,7 @@ export default function AgentPage() {
           rows={3}
           style={{ width: "100%" }}
           value={text}
-          placeholder="investment, around 45 lakh, near Mumbai"
+          placeholder="investment, around AED 1.2 million, near the metro"
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(text); } }}
         />

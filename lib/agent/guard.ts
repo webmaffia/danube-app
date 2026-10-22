@@ -7,7 +7,7 @@ import { TOKEN_AMOUNT } from "@/lib/knowledge";
 
 export interface Evidence {
   numbers: number[];
-  refs: string[]; // plot numbers such as IA-07
+  refs: string[]; // unit numbers such as GZ-0302
 }
 
 export interface Violation {
@@ -28,16 +28,15 @@ export interface StatedFigure {
 }
 
 const UNIT_SCALE: [RegExp, number][] = [
-  [/^(lakhs?|lacs?|l)$/i, 1e5],
-  [/^(crores?|cr)$/i, 1e7],
-  [/^k$/i, 1e3],
+  [/^(millions?|m)$/i, 1e6],
+  [/^(thousand|k)$/i, 1e3],
 ];
 
-// Indian (12,34,567) or western (1,234,567) grouping, or plain decimals, with
-// an optional unit. Letters around the number are excluded so plot numbers and
-// words like "5G" don't count.
+// Western (1,234,567) grouping or plain decimals, with an optional unit.
+// Letters around the number are excluded so unit numbers and words like "5G"
+// don't count. A bare "m" is metres, but "AED 1.2M" is millions.
 const FIGURE =
-  /(₹\s?|rs\.?\s?|inr\s?)?(?<![A-Za-z\d-])(\d{1,3}(?:,\d{2,3})+(?:\.\d+)?|\d+(?:\.\d+)?)(?![\d])\s*(lakhs?|lacs?|crores?|cr\b|l\b|k\b|%|percent\b|per cent\b|sq\.?\s?ft\b|sqft\b|square feet\b|km\b|kms\b|kilometres?\b|kilometers?\b|m\b|metres?\b|meters?\b|minutes?\b|mins?\b|hours?\b|hrs?\b|years?\b|x\b|times\b|acres?\b)?/gi;
+  /(aed\s?|dirhams?\s?)?(?<![A-Za-z\d-])(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)(?![\d])\s*(millions?\b|thousand\b|k\b|dirhams?\b|aed\b|%|percent\b|per cent\b|sq\.?\s?ft\b|sqft\b|square feet\b|km\b|kms\b|kilometres?\b|kilometers?\b|metres?\b|meters?\b|minutes?\b|mins?\b|hours?\b|hrs?\b|years?\b|x\b|times\b|acres?\b|floors?\b|months?\b|m\b)?/gi;
 
 export function extractFigures(text: string): StatedFigure[] {
   const out: StatedFigure[] = [];
@@ -45,22 +44,23 @@ export function extractFigures(text: string): StatedFigure[] {
     const [raw, currency, digits, unit] = m;
     const plain = digits.replace(/,/g, "");
     const decimals = plain.includes(".") ? plain.split(".")[1].length : 0;
-    const scale = unit ? UNIT_SCALE.find(([re]) => re.test(unit.trim()))?.[1] ?? 1 : 1;
+    const isMetres = /^m$/i.test(unit?.trim() ?? "") && !currency;
+    const scale = unit && !isMetres ? UNIT_SCALE.find(([re]) => re.test(unit.trim()))?.[1] ?? 1 : 1;
     const value = parseFloat(plain) * scale;
-    // Half a unit of the last digit spoken: "46 lakh" covers 45.5–46.5 lakh.
+    // Half a unit of the last digit spoken: "1.2 million" covers 1.15–1.25 million.
     const tolerance = scale > 1 ? 0.5 * 10 ** -decimals * scale : decimals > 0 ? 0.5 * 10 ** -decimals : 0.5;
     out.push({ raw: raw.trim(), value, tolerance, hasUnit: Boolean(currency || unit) });
   }
   return out;
 }
 
-const PLOT_REF = /\b[A-Z]{2}-\d{2}\b/g;
+const UNIT_REF = /\b[A-Z]{2}-\d{4}\b/g;
 
 export function extractRefs(text: string): string[] {
-  return text.match(PLOT_REF) ?? [];
+  return text.match(UNIT_REF) ?? [];
 }
 
-/** Collects every figure and plot number found anywhere in a tool result or text. */
+/** Collects every figure and unit number found anywhere in a tool result or text. */
 export function collectEvidence(source: unknown, into: Evidence = { numbers: [], refs: [] }): Evidence {
   if (typeof source === "number" && Number.isFinite(source)) into.numbers.push(source);
   else if (typeof source === "string") {
@@ -93,7 +93,7 @@ export function checkProvenance(text: string, evidence: Evidence): Violation[] {
     if (!backed) violations.push({ check: "provenance", text: f.raw, detail: `figure ${f.raw} not found in any tool result` });
   }
   for (const ref of extractRefs(text)) {
-    if (!evidence.refs.includes(ref)) violations.push({ check: "provenance", text: ref, detail: `plot ${ref} not found in any tool result` });
+    if (!evidence.refs.includes(ref)) violations.push({ check: "provenance", text: ref, detail: `unit ${ref} not found in any tool result` });
   }
   return violations;
 }
@@ -105,7 +105,7 @@ const RETURN_CONTEXT = /\b(returns?|appreciat\w*|yields?|growth|grow|profits?|ga
 const NEGATION = /\b(no one|nobody|not|never|cannot|can't|can not|won't|isn't|aren't|no)\b[^.?!]{0,30}$/i;
 
 export function splitSentences(text: string): string[] {
-  // Split after terminal punctuation followed by space, so "61.94 lakh" stays whole.
+  // Split after terminal punctuation followed by space, so "1.25 million" stays whole.
   return text.split(/(?<=[.?!])\s+/).map((s) => s.trim()).filter(Boolean);
 }
 
@@ -144,9 +144,9 @@ export const PROVENANCE_FALLBACK = "Let me confirm that figure for you.";
 
 /**
  * Whether a sentence must pass the provenance check before it is spoken.
- * Sentences with no digit, date or plot number can go to speak() immediately.
+ * Sentences with no digit, date or unit number can go to speak() immediately.
  */
 export function needsProvenanceCheck(sentence: string): boolean {
-  // Figures, dates and plot numbers all carry a digit.
+  // Figures, dates and unit numbers all carry a digit.
   return /\d/.test(sentence);
 }

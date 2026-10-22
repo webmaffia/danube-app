@@ -3,23 +3,23 @@ import {
   TOOL_DEFINITIONS,
   calculatePayment,
   createBooking,
-  findAdjacentPlots,
+  findAdjacentUnits,
   getKnowledge,
-  listPlots,
+  listUnits,
   runTool,
   searchProjects,
   show,
   toolPill,
 } from "@/lib/agent/tools";
-import { getPlots } from "@/lib/inventory";
+import { getUnits } from "@/lib/inventory";
 
 describe("tool definitions", () => {
   it("has exactly eight strict tools", () => {
     expect(TOOL_DEFINITIONS.map((t) => t.function.name)).toEqual([
       "search_projects",
-      "list_plots",
-      "find_adjacent_plots",
-      "compare_plots",
+      "list_units",
+      "find_adjacent_units",
+      "compare_units",
       "get_knowledge",
       "calculate_payment",
       "show",
@@ -36,99 +36,146 @@ describe("tool definitions", () => {
 });
 
 describe("search_projects", () => {
-  it("ranks Anjarle first for investment ~45 L near Mumbai", () => {
-    const { projects } = searchProjects({ budget_max: 4_500_000, purpose: "investment", region: "near Mumbai", horizon_years: null });
-    expect(projects).toHaveLength(3);
-    expect(projects[0].id).toBe("anjarle");
+  it("ranks Bayz 102 first for investment up to AED 2M near the metro", () => {
+    const { projects } = searchProjects({ budget_max: 2_000_000, purpose: "investment", region: "near the metro", horizon_years: null });
+    expect(projects.length).toBeGreaterThan(3);
+    expect(projects.length).toBeLessThanOrEqual(8);
+    expect(projects[0].id).toBe("bayz102");
     expect(projects[0].available_in_budget).toBeGreaterThan(0);
     expect(projects[0].fit_reason).toMatch(/within budget/);
-    expect(projects[0].fit_score).toBeGreaterThan(projects[2].fit_score);
+    expect(projects[0].fit_score).toBeGreaterThan(projects[projects.length - 1].fit_score);
     for (const p of projects) {
       expect(p).toMatchObject({ id: expect.any(String), entry_ticket: expect.any(Number), rate_per_sqft: expect.any(Number) });
     }
   });
 
   it("always leads with the featured project (demo rule), then ranks the rest", () => {
-    const { projects } = searchProjects({ budget_max: 5_000_000, purpose: "holiday_home", region: "Goa", horizon_years: 6 });
-    expect(projects[0].id).toBe("anjarle");
+    const { projects } = searchProjects({ budget_max: 4_000_000, purpose: "holiday_home", region: "Maritime City waterfront", horizon_years: 6 });
+    expect(projects[0].id).toBe("bayz102");
     expect(projects[0].fit_score).toBeGreaterThan(projects[1].fit_score);
-    expect(projects[1].id).toBe("mopa"); // Goa still ranks Mopa best among the others
+    expect(projects[1].id).toBe("shahrukhzres"); // a waterfront search still ranks Shahrukhz best among the others
   });
 
   it("stays honest when the featured project is over budget", () => {
-    // Anjarle starts at ₹17.7L, so ₹15L is below every plot there.
-    const { projects } = searchProjects({ budget_max: 1_500_000, purpose: "investment", region: null, horizon_years: null });
-    expect(projects[0].id).toBe("anjarle");
+    // Bayz 102 starts at about AED 1.27M, so AED 1M is below every unit there.
+    const { projects } = searchProjects({ budget_max: 1_000_000, purpose: "investment", region: null, horizon_years: null });
+    expect(projects[0].id).toBe("bayz102");
     expect(projects[0].available_in_budget).toBe(0);
-    expect(projects[0].fit_reason).toMatch(/above budget, instalment plan and up to 50% financing/);
-    expect(projects[1].id).toBe("nagpur");
+    expect(projects[0].fit_reason).toMatch(/above budget, the 1% monthly payment plan spreads the cost/);
   });
 
   it("works with an empty profile", () => {
-    expect(searchProjects({ budget_max: null, purpose: null, region: null, horizon_years: null }).projects).toHaveLength(3);
+    const r = searchProjects({ budget_max: null, purpose: null, region: null, horizon_years: null });
+    expect(r.projects.length).toBeGreaterThan(0);
+    expect(r.total_projects).toBe(40);
   });
 });
 
-describe("list_plots", () => {
+describe("list_units", () => {
   const base = { min_size: null, max_size: null, max_price: null, sort: null } as const;
 
-  it("returns only available plots, sorted by price by default", () => {
-    const { plots, total } = listPlots({ ...base, project_id: "anjarle" });
-    expect(total).toBe(getPlots("anjarle").filter((p) => p.status === "available").length);
-    expect(plots.every((p) => p.status === "available")).toBe(true);
-    expect(plots.map((p) => p.price)).toEqual([...plots.map((p) => p.price)].sort((a, b) => a - b));
+  it("returns only available units, sorted by price by default", () => {
+    const { units, total } = listUnits({ ...base, project_id: "bayz102" });
+    expect(total).toBe(getUnits("bayz102").filter((p) => p.status === "available").length);
+    expect(units.every((p) => p.status === "available")).toBe(true);
+    expect(units.map((p) => p.price)).toEqual([...units.map((p) => p.price)].sort((a, b) => a - b));
   });
 
-  it("filters by size for 'show me the 2,000 sq ft options'", () => {
-    const { plots } = listPlots({ ...base, project_id: "anjarle", min_size: 1900, max_size: 2100 });
-    expect(plots.length).toBeGreaterThan(0);
-    expect(plots.every((p) => p.size_sqft === 2002)).toBe(true);
+  it("filters by size for 'show me the 780 sq ft options'", () => {
+    const { units } = listUnits({ ...base, project_id: "bayz102", min_size: 700, max_size: 860 });
+    expect(units.length).toBeGreaterThan(0);
+    expect(units.every((p) => p.size_sqft === 780)).toBe(true);
   });
 
-  it("answers 'which is closest to the entrance'", () => {
-    const { plots } = listPlots({ ...base, project_id: "anjarle", sort: "distance_from_entrance" });
-    const min = Math.min(...plots.map((p) => p.metres_from_entrance));
-    expect(plots[0].metres_from_entrance).toBe(min);
+  it("answers 'which is on the highest floor'", () => {
+    const { units } = listUnits({ ...base, project_id: "bayz102", sort: "floor" });
+    const max = Math.max(...units.map((p) => p.floor));
+    expect(units[0].floor).toBe(max);
   });
 
   it("respects max_price", () => {
-    const { plots } = listPlots({ ...base, project_id: "mopa", max_price: 5_000_000 });
-    expect(plots.every((p) => p.price <= 5_000_000)).toBe(true);
+    const { units } = listUnits({ ...base, project_id: "shahrukhzres", max_price: 2_000_000 });
+    expect(units.every((p) => p.price <= 2_000_000)).toBe(true);
   });
 
   it("reports unknown projects", () => {
-    expect(listPlots({ ...base, project_id: "nowhere" })).toMatchObject({ error: expect.any(String), total: 0 });
+    expect(listUnits({ ...base, project_id: "nowhere" })).toMatchObject({ error: expect.any(String), total: 0 });
   });
 
-  it("excludes plots held during the session", () => {
-    const first = listPlots({ ...base, project_id: "anjarle" }).plots[0];
-    const after = listPlots({ ...base, project_id: "anjarle" }, { overrides: { [first.id]: "held" } });
-    expect(after.plots.find((p) => p.id === first.id)).toBeUndefined();
+  it("excludes units held during the session", () => {
+    const first = listUnits({ ...base, project_id: "bayz102" }).units[0];
+    const after = listUnits({ ...base, project_id: "bayz102" }, { overrides: { [first.id]: "held" } });
+    expect(after.units.find((p) => p.id === first.id)).toBeUndefined();
+  });
+});
+
+describe("sold-out projects", () => {
+  it("ranks them last and says they are sold out", () => {
+    const { projects } = searchProjects({ budget_max: null, purpose: null, region: "Arjan", horizon_years: null });
+    const soldOut = projects.filter((p) => p.sold_out);
+    for (const p of soldOut) {
+      expect(p.available_units).toBe(0);
+      expect(p.fit_reason).toMatch(/sold out/);
+    }
+    // an Arjan search never lets a sold-out project outrank one that can be booked
+    const firstSoldOut = projects.findIndex((p) => p.sold_out);
+    if (firstSoldOut >= 0) expect(projects.slice(firstSoldOut).every((p) => p.sold_out)).toBe(true);
+  });
+
+  it("has no units to list, book or map", () => {
+    expect(listUnits({ project_id: "skyz", min_size: null, max_size: null, max_price: null, sort: null })).toMatchObject({ total: 0, note: expect.stringMatching(/sold out/) });
+    expect(createBooking({ unit_id: "skyz-1" })).toMatchObject({ error: expect.any(String) });
+    expect(show({ view: "units", id: "skyz" }).ok).toBe(false);
+    expect(show({ view: "project", id: "skyz" }).ok).toBe(true);
+  });
+
+  it("still answers questions from the project page", () => {
+    const text = getKnowledge({ project_id: "skyz", topic: "location" }).chunks.map((c) => c.text).join(" ");
+    expect(text).toMatch(/Arjan/);
+    expect(text).toMatch(/sold out/);
+    expect(getKnowledge({ project_id: "skyz", topic: "booking_policy" }).chunks[0].text).toMatch(/nothing to book/);
+    expect(getKnowledge({ project_id: "breez", topic: "market" }).chunks.map((c) => c.text).join(" ")).toMatch(/1,400,000/);
+  });
+
+  it("covers every project in every knowledge topic", () => {
+    for (const topic of ["location", "payment_plan", "booking_policy", "title_approvals", "timeline", "amenities", "infrastructure", "developer", "market", "connectivity"] as const) {
+      const chunks = getKnowledge({ project_id: null, topic }).chunks;
+      expect(chunks.length, topic).toBeGreaterThanOrEqual(40);
+    }
   });
 });
 
 describe("get_knowledge", () => {
   it("returns project facts", () => {
-    const { chunks } = getKnowledge({ project_id: "anjarle", topic: "title_approvals" });
-    expect(chunks.some((c) => c.text.includes("P52800076609"))).toBe(true);
+    const { chunks } = getKnowledge({ project_id: "bayz102", topic: "title_approvals" });
+    expect(chunks.some((c) => c.text.includes("escrow"))).toBe(true);
   });
 
   it("returns the price playbook without any discount", () => {
     const text = getKnowledge({ project_id: null, topic: "price" }).chunks.map((c) => c.text).join(" ");
     expect(text).toMatch(/smaller/i);
-    expect(text).toMatch(/instalment/i);
-    expect(text).toMatch(/financing/i);
+    expect(text).toMatch(/payment plan/i);
     expect(text).toMatch(/never offer a discount/i);
   });
 
-  it("adds project colour to why_here", () => {
-    expect(getKnowledge({ project_id: "anjarle", topic: "why_here" }).chunks).toHaveLength(2);
+  it("states the 1% payment plan and says when a project's terms are unconfirmed", () => {
+    const bayz = getKnowledge({ project_id: "bayz102", topic: "payment_plan" }).chunks.map((c) => c.text).join(" ");
+    expect(bayz).toMatch(/1% payment plan/);
+    expect(bayz).toMatch(/around 20%/);
+    expect(bayz).toMatch(/indicative/);
+    const greenz = getKnowledge({ project_id: "greenz", topic: "payment_plan" }).chunks.map((c) => c.text).join(" ");
+    expect(greenz).toMatch(/40 months/);
+    expect(greenz).toMatch(/final 40%/);
   });
 
-  it("returns connectivity across all projects when no project given", () => {
+  it("adds project colour to why_here", () => {
+    expect(getKnowledge({ project_id: "bayz102", topic: "why_here" }).chunks).toHaveLength(2);
+  });
+
+  it("returns infrastructure across all projects when no project given", () => {
     const { chunks } = getKnowledge({ project_id: null, topic: "infrastructure" });
-    expect(chunks.some((c) => c.text.startsWith("[mopa]"))).toBe(true);
-    expect(chunks.some((c) => c.text.startsWith("[anjarle]"))).toBe(true);
+    expect(chunks.some((c) => c.text.startsWith("[shahrukhzres]"))).toBe(true);
+    expect(chunks.some((c) => c.text.startsWith("[bayz102]"))).toBe(true);
   });
 
   it("rejects unknown topics", () => {
@@ -137,19 +184,35 @@ describe("get_knowledge", () => {
 });
 
 describe("calculate_payment", () => {
-  it("computes a standard EMI", () => {
-    // ₹50 L, 20% down, 8.5% over 15 years → loan ₹40 L, EMI ≈ ₹39,390
-    const r = calculatePayment({ price: 5_000_000, down_payment_pct: 20, annual_rate: 8.5, tenure_years: 15 });
-    expect(r.down_payment).toBe(1_000_000);
-    expect(r.loan_amount).toBe(4_000_000);
-    expect(r.emi).toBeGreaterThan(39_300);
-    expect(r.emi).toBeLessThan(39_500);
-    expect(r.total_interest).toBe(r.emi * 180 - r.loan_amount);
+  it("runs the 1% plan: 20% down, 1% a month, then the balance", () => {
+    const r = calculatePayment({ price: 1_000_000, down_payment_pct: 20, months: 40 });
+    expect(r.down_payment).toBe(200_000);
+    expect(r.balance_of_down_payment).toBe(180_000);
+    expect(r.months).toBe(40);
+    expect(r.monthly_instalment).toBe(10_000);
+    expect(r.monthly_pct_of_price).toBe(1);
+    expect(r.total_monthly_payments).toBe(400_000);
+    expect(r.balance_on_completion).toBe(400_000);
+    expect(r.completion_pct_of_price).toBe(40);
+    expect(r.interest).toBe(0);
+    // everything adds back to the price
+    expect(r.down_payment + r.total_monthly_payments + r.balance_on_completion).toBe(1_000_000);
   });
 
-  it("handles 100% down and zero rate", () => {
-    expect(calculatePayment({ price: 4_000_000, down_payment_pct: 100, annual_rate: 9, tenure_years: 10 })).toMatchObject({ loan_amount: 0, emi: 0 });
-    expect(calculatePayment({ price: 1_200_000, down_payment_pct: 0, annual_rate: 0, tenure_years: 1 }).emi).toBe(100_000);
+  it("leaves no balance on completion when the instalments run 80 months", () => {
+    const r = calculatePayment({ price: 1_000_000, down_payment_pct: 20, months: 80 });
+    expect(r.balance_on_completion).toBe(0);
+  });
+
+  it("keeps the instalments within 12 to 80 months and never past the price", () => {
+    expect(calculatePayment({ price: 1_000_000, down_payment_pct: 20, months: 200 }).months).toBe(80);
+    expect(calculatePayment({ price: 1_000_000, down_payment_pct: 20, months: 6 }).months).toBe(12);
+    // 50% down leaves room for at most 50 instalments of 1%
+    expect(calculatePayment({ price: 1_000_000, down_payment_pct: 50, months: 80 }).months).toBe(50);
+  });
+
+  it("never lets the balance of the down payment go negative", () => {
+    expect(calculatePayment({ price: 100_000, down_payment_pct: 10, months: 40 }).balance_of_down_payment).toBe(0);
   });
 });
 
@@ -158,74 +221,84 @@ describe("show", () => {
     expect(show({ view: "recommendations", id: null })).toMatchObject({ ok: true });
   });
 
-  it("requires a project for project and plots views", () => {
+  it("requires a project for project and units views", () => {
     expect(show({ view: "project", id: null }).ok).toBe(false);
-    expect(show({ view: "plots", id: "anjarle" })).toMatchObject({ ok: true, id: "anjarle" });
+    expect(show({ view: "units", id: "bayz102" })).toMatchObject({ ok: true, id: "bayz102" });
   });
 
-  it("resolves a plot number to a plot id", () => {
-    const plot = getPlots("anjarle")[0];
-    expect(show({ view: "plot", id: plot.plotNo })).toMatchObject({ ok: true, id: plot.id });
+  it("opens the location view for any project", () => {
+    expect(show({ view: "location", id: "shahrukhzres" })).toMatchObject({ ok: true, id: "shahrukhzres" });
+    expect(show({ view: "location", id: "nowhere" }).ok).toBe(false);
+  });
+
+  it("resolves a unit number to a unit id", () => {
+    const unit = getUnits("bayz102")[0];
+    expect(show({ view: "unit", id: unit.unitNo })).toMatchObject({ ok: true, id: unit.id });
+  });
+
+  it("keeps the booking journey in order", () => {
+    expect(show({ view: "kyc", id: null }, { flow: { paid: false, kyc: false } }).ok).toBe(false);
+    expect(show({ view: "plan", id: null }, { flow: { paid: true, kyc: false } }).ok).toBe(false);
+    expect(show({ view: "plan", id: null }, { flow: { paid: true, kyc: true } }).ok).toBe(true);
   });
 });
 
 describe("create_booking", () => {
-  it("creates an initiated booking with the ₹45,000 token and takes no payment", () => {
-    const plot = getPlots("anjarle").find((p) => p.status === "available")!;
-    const r = createBooking({ plot_id: plot.plotNo });
-    expect(r).toMatchObject({ token_amount: 45_000, status: "initiated", plot: { id: plot.id, plot_no: plot.plotNo } });
-    expect((r as { booking_id: string }).booking_id).toMatch(/^BK-IA-\d{2}-/);
+  it("creates an initiated booking with the AED 20,000 token and takes no payment", () => {
+    const unit = getUnits("bayz102").find((p) => p.status === "available")!;
+    const r = createBooking({ unit_id: unit.unitNo });
+    expect(r).toMatchObject({ token_amount: 20_000, status: "initiated", unit: { id: unit.id, unit_no: unit.unitNo } });
+    expect((r as { booking_id: string }).booking_id).toMatch(/^BK-BY-\d{4}-/);
   });
 
-  it("refuses sold and held plots", () => {
-    const sold = getPlots("anjarle").find((p) => p.status === "sold")!;
-    expect(createBooking({ plot_id: sold.id })).toMatchObject({ error: expect.stringMatching(/sold/) });
-    const avail = getPlots("anjarle").find((p) => p.status === "available")!;
-    expect(createBooking({ plot_id: avail.id }, { overrides: { [avail.id]: "held" } })).toMatchObject({ error: expect.stringMatching(/held/) });
+  it("refuses sold and held units", () => {
+    const sold = getUnits("bayz102").find((p) => p.status === "sold")!;
+    expect(createBooking({ unit_id: sold.id })).toMatchObject({ error: expect.stringMatching(/sold/) });
+    const avail = getUnits("bayz102").find((p) => p.status === "available")!;
+    expect(createBooking({ unit_id: avail.id }, { overrides: { [avail.id]: "held" } })).toMatchObject({ error: expect.stringMatching(/held/) });
   });
 
-  it("refuses unknown plots", () => {
-    expect(createBooking({ plot_id: "ZZ-99" })).toMatchObject({ error: expect.any(String) });
+  it("refuses unknown units", () => {
+    expect(createBooking({ unit_id: "ZZ-9999" })).toMatchObject({ error: expect.any(String) });
   });
 });
 
 describe("dispatch and pills", () => {
   it("routes by name and labels results", () => {
-    const r = runTool("list_plots", { project_id: "anjarle", min_size: null, max_size: null, max_price: null, sort: null });
-    expect(toolPill("list_plots", r)).toMatch(/^checking availability · \d+ plots in range$/);
+    const r = runTool("list_units", { project_id: "bayz102", min_size: null, max_size: null, max_price: null, sort: null });
+    expect(toolPill("list_units", r)).toMatch(/^checking availability · \d+ units in range$/);
     expect(runTool("nope", {})).toMatchObject({ error: expect.any(String) });
+  });
+
+  it("labels a payment plan result", () => {
+    const r = runTool("calculate_payment", { price: 1_000_000, down_payment_pct: 20, months: 40 });
+    expect(toolPill("calculate_payment", r)).toBe("working out plan · AED 10,000/mo");
   });
 });
 
-describe("day 1 tuning", () => {
-  it("widens a single size to the nearest configuration", () => {
-    const { plots } = listPlots({ project_id: "anjarle", min_size: 2000, max_size: 2000, max_price: null, sort: null });
-    expect(plots.length).toBeGreaterThan(0);
-    expect(plots.every((p) => p.size_sqft === 2002)).toBe(true);
-  });
-
-  it("uses the indicative rate when none is given", () => {
-    const r = calculatePayment({ price: 4_399_000, down_payment_pct: 20, annual_rate: null, tenure_years: 15 });
-    expect(r.annual_rate).toBe(8.75);
-    expect(r.rate_basis).toMatch(/indicative/);
+describe("tuning", () => {
+  it("widens a single size to the nearest layout", () => {
+    const { units } = listUnits({ project_id: "bayz102", min_size: 780, max_size: 780, max_price: null, sort: null });
+    expect(units.length).toBeGreaterThan(0);
+    expect(units.every((p) => p.size_sqft === 780)).toBe(true);
   });
 
   it("serves connectivity distances from the inventory", () => {
-    const text = getKnowledge({ project_id: "anjarle", topic: "connectivity" }).chunks[0].text;
-    expect(text).toMatch(/Mumbai 225 km/);
-    expect(getKnowledge({ project_id: null, topic: "connectivity" }).chunks).toHaveLength(3);
+    const text = getKnowledge({ project_id: "bayz102", topic: "connectivity" }).chunks[0].text;
+    expect(text).toMatch(/Business Bay Canal 2 minutes/);
+    expect(getKnowledge({ project_id: null, topic: "connectivity" }).chunks).toHaveLength(40);
   });
 });
 
-describe("find_adjacent_plots", () => {
-  it("returns only plots that touch on the grid", () => {
-    const r = findAdjacentPlots({ project_id: "anjarle", count: 3, min_size: null, max_size: null, max_total_price: null });
-    const plots = getPlots("anjarle");
+describe("find_adjacent_units", () => {
+  it("returns only units that touch on the grid", () => {
+    const r = findAdjacentUnits({ project_id: "bayz102", count: 3, min_size: null, max_size: null, max_total_price: null });
+    const units = getUnits("bayz102");
     expect(r.groups!.length).toBeGreaterThan(0);
     for (const g of r.groups!) {
-      const cells = g.plots.map((x) => plots.find((p) => p.id === x.id)!);
+      const cells = g.units.map((x) => units.find((p) => p.id === x.id)!);
       expect(cells.every((c) => c.status === "available")).toBe(true);
-      // connected: every plot touches another in the group
+      // connected: every unit touches another in the group
       for (const c of cells) {
         expect(cells.some((o) => o !== c && Math.abs(o.gridRow - c.gridRow) + Math.abs(o.gridCol - c.gridCol) === 1)).toBe(true);
       }

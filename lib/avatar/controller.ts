@@ -510,7 +510,7 @@ let liveSince: number | null = null;
 
 function readLiveSeconds(): number {
   try {
-    return Number(sessionStorage.getItem("hoabl-live-seconds")) || 0;
+    return Number(sessionStorage.getItem("danube-live-seconds")) || 0;
   } catch {
     return 0;
   }
@@ -518,7 +518,7 @@ function readLiveSeconds(): number {
 
 function saveLiveSeconds(total: number): void {
   try {
-    sessionStorage.setItem("hoabl-live-seconds", String(Math.round(total)));
+    sessionStorage.setItem("danube-live-seconds", String(Math.round(total)));
   } catch {}
 }
 const unsubscribeReport = useAvatar.subscribe((state, prev) => {

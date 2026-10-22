@@ -1,7 +1,7 @@
 "use client";
 
 // A presenter-only escape hatch: wipes the whole session (profile, chat,
-// booking, KYC, loan, screen) and drops back to the landing page, so a demo
+// booking, KYC, screen) and drops back to the landing page, so a demo
 // can be re-run from a clean slate without reloading or clearing storage by hand.
 
 import { useRouter } from "next/navigation";

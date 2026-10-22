@@ -34,7 +34,7 @@ export function AvatarStage({ pip, lift = false, onExpand }: { pip: boolean; /**
     return (
       <button
         onClick={() => avatar.restore()}
-        aria-label="Bring back the Land Advisor"
+        aria-label="Bring back the Property Advisor"
         className={`absolute ${lift ? "bottom-[76px]" : "bottom-3"} right-3 z-[70] h-14 w-14 overflow-hidden rounded-full bg-site shadow-xl ring-2 ring-white/80`}
       >
         <SvgAvatar speaking={false} compact />
@@ -46,7 +46,7 @@ export function AvatarStage({ pip, lift = false, onExpand }: { pip: boolean; /**
     <div
       className={`overflow-hidden bg-site ${
         // The tile floats above everything, the walkthrough included, so the
-        // Land Advisor can narrate the films.
+        // Property Advisor can narrate the films.
         pip ? `absolute ${lift ? "bottom-[76px]" : "bottom-3"} right-3 z-[70] h-[118px] w-[90px] cursor-pointer rounded-2xl shadow-xl ring-2 ring-white/80` : "absolute inset-0 z-0"
       }`}
       onClick={pip ? onExpand : undefined}
@@ -64,7 +64,7 @@ export function AvatarStage({ pip, lift = false, onExpand }: { pip: boolean; /**
       />
       {pip && (
         <>
-          <span className={`absolute bottom-1.5 left-1.5 h-2 w-2 rounded-full ring-2 ring-black/30 ${speaking ? "animate-pulse bg-[#d6a24a]" : listening ? "bg-sky-300" : live ? "bg-emerald-400" : "bg-slate-300"}`} />
+          <span className={`absolute bottom-1.5 left-1.5 h-2 w-2 rounded-full ring-2 ring-black/30 ${speaking ? "animate-pulse bg-[#BDA588]" : listening ? "bg-sky-300" : live ? "bg-emerald-400" : "bg-slate-300"}`} />
           <span className="absolute right-1 top-1 rounded-md bg-black/45 p-1 text-white backdrop-blur" aria-hidden="true">
             <ExpandIcon className="h-3.5 w-3.5" />
           </span>
@@ -74,7 +74,7 @@ export function AvatarStage({ pip, lift = false, onExpand }: { pip: boolean; /**
                 e.stopPropagation();
                 avatar.dismiss();
               }}
-              aria-label="Switch off the Land Advisor"
+              aria-label="Switch off the Property Advisor"
               className="absolute left-1 top-1 rounded-full bg-black/55 p-1 text-white backdrop-blur"
             >
               <CloseIcon className="h-3.5 w-3.5" />

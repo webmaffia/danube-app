@@ -14,19 +14,19 @@ import { Logo } from "@/components/Logo";
 import { Button } from "@/components/journey/ui";
 
 const OTP = "481902";
-const CITIES = ["Mumbai", "Pune", "Thane", "Navi Mumbai", "Bengaluru", "Delhi NCR", "Hyderabad", "Other"];
+const CITIES = ["Dubai", "Abu Dhabi", "Sharjah", "London", "Mumbai", "Moscow", "Riyadh", "Other"];
 
 export default function Register() {
   const router = useRouter();
   const [step, setStep] = useState<"details" | "otp">("details");
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
-  const [city, setCity] = useState("Mumbai");
+  const [city, setCity] = useState("Dubai");
   const [code, setCode] = useState("");
   const [autofilled, setAutofilled] = useState(false);
   const firstInput = useRef<HTMLInputElement>(null);
 
-  const mobileOk = /^[6-9]\d{9}$/.test(mobile);
+  const mobileOk = /^5\d{8}$/.test(mobile);
   const detailsOk = name.trim().length >= 2 && mobileOk;
 
   useEffect(() => {
@@ -67,7 +67,7 @@ export default function Register() {
           <span className="h-1 w-8 rounded-full bg-verd" />
           <span className={`h-1 w-8 rounded-full ${step === "otp" ? "bg-verd" : "bg-line"}`} />
         </div>
-        <Logo className="ml-auto h-9" />
+        <Logo className="ml-auto w-32" />
       </header>
 
       {step === "details" ? (
@@ -96,17 +96,17 @@ export default function Register() {
           <label className="mt-4 block text-[13px] font-medium text-ink-soft">
             Mobile number
             <div className="mt-1.5 flex h-13 items-center rounded-xl border border-line bg-card focus-within:border-verd">
-              <span className="border-r border-line px-3.5 text-[16px] text-ink-soft">+91</span>
+              <span className="border-r border-line px-3.5 text-[16px] text-ink-soft">+971</span>
               <input
                 value={mobile}
-                onChange={(e) => setMobile(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                onChange={(e) => setMobile(e.target.value.replace(/\D/g, "").slice(0, 9))}
                 inputMode="numeric"
                 autoComplete="tel-national"
-                placeholder="98765 43210"
+                placeholder="50 123 4567"
                 className="h-full w-full rounded-r-xl bg-transparent px-3.5 text-[16px] text-ink outline-none"
               />
             </div>
-            {mobile.length === 10 && !mobileOk && <span className="mt-1 block text-[12px] text-danger">Enter a valid Indian mobile number.</span>}
+            {mobile.length === 9 && !mobileOk && <span className="mt-1 block text-[12px] text-danger">Enter a valid UAE mobile number, starting with 5.</span>}
           </label>
 
           <label className="mt-4 block text-[13px] font-medium text-ink-soft">
@@ -140,7 +140,7 @@ export default function Register() {
             <SandboxTag />
           </div>
           <p className="mt-2 text-[15px] text-ink-soft">
-            Sent to +91 {mobile.slice(0, 5)} {mobile.slice(5)}
+            Sent to +971 {mobile.slice(0, 2)} {mobile.slice(2, 5)} {mobile.slice(5)}
           </p>
 
           <label className="relative mt-8 block">

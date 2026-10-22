@@ -10,7 +10,7 @@ describe("partialSay", () => {
   });
 
   it("decodes escapes, including ones split across chunks", () => {
-    expect(partialSay('{"say":"a \\"quote\\" and \\u20b945')).toEqual({ text: 'a "quote" and ₹45', done: false });
+    expect(partialSay('{"say":"a \\"quote\\" and \\u00e9')).toEqual({ text: 'a "quote" and é', done: false });
     expect(partialSay('{"say":"cut \\')).toEqual({ text: "cut ", done: false });
     expect(partialSay('{"say":"cut \\u20')).toEqual({ text: "cut ", done: false });
   });
@@ -19,13 +19,13 @@ describe("partialSay", () => {
 describe("SentenceGate", () => {
   it("releases sentences only when complete, never splitting decimals", () => {
     const out: string[] = [];
-    const gate = new SentenceGate(() => ({ numbers: [6194000], refs: [] }), (s) => out.push(s));
-    gate.update("It is ₹61.", false);
+    const gate = new SentenceGate(() => ({ numbers: [1250000], refs: [] }), (s) => out.push(s));
+    gate.update("It is AED 1.", false);
     expect(out).toEqual([]);
-    gate.update("It is ₹61.94 lakh. Shall", false);
-    expect(out).toEqual(["It is ₹61.94 lakh."]);
-    gate.update("It is ₹61.94 lakh. Shall I hold it?", true);
-    expect(out).toEqual(["It is ₹61.94 lakh.", "Shall I hold it?"]);
+    gate.update("It is AED 1.25M. Shall", false);
+    expect(out).toEqual(["It is AED 1.25M."]);
+    gate.update("It is AED 1.25M. Shall I hold it?", true);
+    expect(out).toEqual(["It is AED 1.25M.", "Shall I hold it?"]);
   });
 
   it("stops at the first sentence that fails", () => {

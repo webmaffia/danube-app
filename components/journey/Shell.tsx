@@ -19,7 +19,7 @@ import { nextPlanStep, useSession } from "@/lib/store";
 import { avatar, useAvatar } from "@/lib/avatar/controller";
 import { flushScroll, requestScroll } from "@/lib/maps";
 import { routeFor, screenFromPath, VIEW_LABEL, type View } from "@/lib/journey";
-import { findPlot } from "@/lib/inventory";
+import { findUnit } from "@/lib/inventory";
 import { AvatarStage } from "@/components/agent/AvatarStage";
 import { Transcript } from "@/components/agent/Transcript";
 import { Composer } from "@/components/agent/Composer";
@@ -29,13 +29,13 @@ import { Logo } from "@/components/Logo";
 import { screenCue } from "@/lib/avatar/screen-lines";
 import { FindingOverlay } from "@/components/journey/FindingOverlay";
 
-// Next steps on the property page: the plot map first, then the questions
+// Next steps on the property page: the unit map first, then the questions
 // buyers usually ask about a project.
-const SHOW_PLOTS = "Take me to the plots";
-const BOOK_PLOT = "Book this plot";
-const WORK_OUT_EMI = "Work out EMI";
+const SHOW_UNITS = "Take me to the units";
+const BOOK_UNIT = "Book this unit";
+const SEE_PLAN = "See payment plan";
 
-const TRAIL_KEY = "hoabl-trail";
+const TRAIL_KEY = "danube-trail";
 
 function readTrail(): string[] {
   try {
@@ -55,34 +55,33 @@ function saveTrail(v: string[]): void {
 /** One level up, for Back when there's no earlier screen in this session. */
 function parentOf(path: string): string {
   const parts = path.split("/").filter(Boolean);
-  if (parts[0] === "plots" && parts[2] === "map") return `/plots/${parts[1]}`;
-  if (parts[0] === "plots" && parts[1]) return "/plots";
-  // The booking journey steps back the way it came: loan → KYC → booking → plots.
-  if (parts[0] === "money" && parts[1] === "loan") return "/booking/kyc";
+  if (parts[0] === "units" && parts[2] === "map") return `/units/${parts[1]}`;
+  if (parts[0] === "units" && parts[1]) return "/units";
+  // The booking journey steps back the way it came: payment schedule → KYC → booking → units.
   if (parts[0] === "booking" && parts[1] === "plan") return "/booking/kyc";
   if (parts[0] === "booking" && parts[1] === "kyc") return "/booking";
   if (parts[0] === "booking" || parts[0] === "money") {
-    const plot = useSession.getState().selectedPlot;
-    const project = (plot && findPlot(plot)?.projectId) || "anjarle";
-    return `/plots/${project}/map`;
+    const unit = useSession.getState().selectedUnit;
+    const project = (unit && findUnit(unit)?.projectId) || "bayz102";
+    return `/units/${project}/map`;
   }
   return "/agent";
 }
 const PROJECT_NEXT_STEPS = [
-  SHOW_PLOTS,
+  SHOW_UNITS,
   "What's the price range?",
   "Is it RERA registered?",
-  "When is possession?",
+  "When is handover?",
   "What amenities are there?",
-  "How far is it from Mumbai?",
+  "How far is the metro?",
   "What's the payment plan?",
 ];
 // Chips for the post-KYC steps, keyed by the step that's next.
 const PLAN_CHIPS: Record<string, string[]> = {
-  i20: ["Take me to the 20% instalment", "What happens next?", "Check my loan eligibility"],
-  allotment: ["Get my allotment letter", "What is an allotment letter?"],
-  i40: ["Take me to the 40% instalment", "What happens next?"],
-  registration: ["Take me to registration", "What do I get at registration?"],
+  down: ["Take me to the down payment", "What happens next?"],
+  spa: ["Sign my agreement", "What is the sales agreement?"],
+  oqood: ["Register with Oqood", "What is Oqood?"],
+  monthly: ["Take me to my first instalment", "How do the monthly payments work?"],
   done: [],
 };
 // With the avatar off, these next steps open their screen directly instead of
@@ -90,12 +89,11 @@ const PLAN_CHIPS: Record<string, string[]> = {
 const DIRECT_ROUTES: Record<string, string> = {
   "How do I pay the token?": "/booking",
   "Start my KYC": "/booking/kyc",
-  "Continue to my payment plan": "/booking/plan",
-  "Check my loan eligibility": "/money/loan",
-  "Take me to the 20% instalment": "/booking/plan",
-  "Get my allotment letter": "/booking/plan",
-  "Take me to the 40% instalment": "/booking/plan",
-  "Take me to registration": "/booking/plan",
+  "Continue to my payment schedule": "/booking/plan",
+  "Take me to the down payment": "/booking/plan",
+  "Sign my agreement": "/booking/plan",
+  "Register with Oqood": "/booking/plan",
+  "Take me to my first instalment": "/booking/plan",
 };
 const noopSubscribe = () => () => {};
 
@@ -104,7 +102,7 @@ export function JourneyShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   // sessionStorage only exists in the browser, so render after hydration.
   const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false);
-  const { turns, busy, error, profile, send, requestHuman, screen, screenSeq, selectedPlot, overrides, onboarding, booking, kyc, plan } = useSession();
+  const { turns, busy, error, profile, send, requestHuman, screen, screenSeq, selectedUnit, overrides, onboarding, booking, kyc, plan } = useSession();
   const { mode, note, liveEnabled, dismissed } = useAvatar();
   const showPills = true; // the toggle is gone: the advisor's checks always show
   const greeted = useRef(false);
@@ -119,7 +117,7 @@ export function JourneyShell({ children }: { children: ReactNode }) {
   const popped = useRef(false);
   const content = useRef<HTMLDivElement>(null);
   const lastScreenPath = useRef<string | null>(null);
-  /** The route the Land Advisor itself navigated to, so its own reply covers it. */
+  /** The route the Property Advisor itself navigated to, so its own reply covers it. */
   const agentNav = useRef<string | null>(null);
 
   const onScreen = pathname !== "/agent";
@@ -184,7 +182,7 @@ export function JourneyShell({ children }: { children: ReactNode }) {
       }
       return;
     }
-    s.setScreen(screenFromPath(pathname, s.selectedPlot));
+    s.setScreen(screenFromPath(pathname, s.selectedUnit));
     if (pathname !== "/agent") lastScreenPath.current = pathname;
     // A history move onto the screen before the last one is a step back (the
     // arrow, or the phone's own back); anything else is a step forward.
@@ -197,7 +195,7 @@ export function JourneyShell({ children }: { children: ReactNode }) {
     saveTrail(v);
     content.current?.scrollTo({ top: 0 });
 
-    // Keep the voice on the screen. If the Land Advisor opened this screen,
+    // Keep the voice on the screen. If the Property Advisor opened this screen,
     // its reply is already about it. Otherwise the customer did: stop talking
     // about the last screen, drop any reply still coming about it, and say a
     // line about this one (unless a tap here just asked the advisor something).
@@ -208,7 +206,7 @@ export function JourneyShell({ children }: { children: ReactNode }) {
     agentNav.current = null;
     const cue = screenCue(pathname, {
       firstName: s.profile.name?.split(" ")[0] ?? null,
-      booking: s.booking && { plot_no: s.booking.plot_no, status: s.booking.status },
+      booking: s.booking && { unit_no: s.booking.unit_no, status: s.booking.status },
       kycDone: Boolean(s.kyc),
       plan: nextPlanStep(s.plan),
     });
@@ -225,27 +223,27 @@ export function JourneyShell({ children }: { children: ReactNode }) {
   if (!mounted || !profile.name) return <div className="h-full" />;
 
   const last = turns[turns.length - 1];
-  // On the property page the chips are the next steps, led by the plot map.
+  // On the property page the chips are the next steps, led by the unit map.
   const onProject = onScreen && screen?.view === "project";
   // Screens with a pinned CTA bar: the avatar tile lifts above it and the page needs no bottom padding.
   const pinnedBar =
-    onProject || (onScreen && (screen?.view === "calculator" || screen?.view === "booking" || screen?.view === "kyc" || screen?.view === "loan" || screen?.view === "plan"));
-  // Screens that speak for themselves: no Land Advisor strip with its latest line.
+    onProject || (onScreen && (screen?.view === "calculator" || screen?.view === "booking" || screen?.view === "kyc" || screen?.view === "plan"));
+  // Screens that speak for themselves: no Property Advisor strip with its latest line.
   const hideDock =
-    onProject || (onScreen && (screen?.view === "recommendations" || screen?.view === "plots" || screen?.view === "plot" || screen?.view === "booking" || screen?.view === "kyc" || screen?.view === "loan" || screen?.view === "plan"));
-  // On the plot map, a selected plot that's free to book leads with "Book this plot".
-  const onMap = onScreen && (screen?.view === "plots" || screen?.view === "plot");
-  const picked = onMap && selectedPlot ? findPlot(selectedPlot, overrides) : undefined;
+    onProject || (onScreen && (screen?.view === "recommendations" || screen?.view === "units" || screen?.view === "unit" || screen?.view === "booking" || screen?.view === "kyc" || screen?.view === "plan"));
+  // On the unit map, a selected unit that's free to book leads with "Book this unit".
+  const onMap = onScreen && (screen?.view === "units" || screen?.view === "unit");
+  const picked = onMap && selectedUnit ? findUnit(selectedUnit, overrides) : undefined;
   const bookable = picked?.status === "available" && picked.projectId === pathname.split("/")[2];
   const agentChips = last?.kind === "agent" ? last.chips : [];
-  // The booking journey runs in order (token, KYC, loan): only offer the step that's next.
+  // The booking journey runs in order (token, KYC, payment schedule): only offer the step that's next.
   const paid = booking?.status === "paid";
   const journeyChips =
     onScreen && screen?.view === "booking"
       ? !booking
         ? undefined
         : !paid
-          ? ["How do I pay the token?", "Is the token refundable?", "Explain my contribution"]
+          ? ["How do I pay the token?", "Is the token refundable?", "Why this token amount?"]
           : !kyc
             ? ["Start my KYC", "Why is KYC needed?", "What happens next?"]
             : PLAN_CHIPS[nextPlanStep(plan) ?? "done"]
@@ -254,7 +252,7 @@ export function JourneyShell({ children }: { children: ReactNode }) {
           ? ["How do I pay the token?", "Is the token refundable?"]
           : !kyc
             ? ["What do I need for KYC?", "Is my data safe?"]
-            : ["Continue to my payment plan", "Check my loan eligibility"]
+            : ["Continue to my payment schedule", "What happens next?"]
         : onScreen && screen?.view === "plan"
           ? !paid
             ? ["How do I pay the token?"]
@@ -269,9 +267,9 @@ export function JourneyShell({ children }: { children: ReactNode }) {
     : onProject
     ? PROJECT_NEXT_STEPS
     : bookable
-      ? [BOOK_PLOT, WORK_OUT_EMI, ...agentChips.filter((c) => !/book|emi/i.test(c))].slice(0, 4)
+      ? [BOOK_UNIT, SEE_PLAN, ...agentChips.filter((c) => !/book|plan/i.test(c))].slice(0, 4)
       : onMap
-        ? agentChips.filter((c) => !/emi/i.test(c))
+        ? agentChips.filter((c) => !/plan/i.test(c))
         : agentChips;
   const lastAgent = [...turns].reverse().find((t) => t.kind === "agent");
   const running = [...turns].reverse().find((t) => t.kind === "tool" && !t.tool.pill);
@@ -286,7 +284,7 @@ export function JourneyShell({ children }: { children: ReactNode }) {
   // The conversation carries on across the minimise: mark the route as the
   // advisor's own so the screen cue doesn't cut off or talk over its reply.
   const minimise = () => {
-    const target = lastScreenPath.current ?? (lastShow?.kind === "show" ? routeFor({ view: lastShow.view as View, id: lastShow.id }) : "/plots");
+    const target = lastScreenPath.current ?? (lastShow?.kind === "show" ? routeFor({ view: lastShow.view as View, id: lastShow.id }) : "/units");
     agentNav.current = target;
     router.push(target);
   };
@@ -311,19 +309,19 @@ export function JourneyShell({ children }: { children: ReactNode }) {
     }
   };
   const sendFromComposer = (text: string) => {
-    // The lead next step opens the plot map right away; the Land Advisor then
+    // The lead next step opens the unit map right away; the Property Advisor then
     // talks the customer through it.
-    if (onProject && text === SHOW_PLOTS && screen?.id) router.push(`/plots/${screen.id}/map`);
-    // Straight to the calculator; it picks a plot itself if none is chosen.
-    if ((onProject || bookable) && text === WORK_OUT_EMI) return void router.push("/money/calculator");
+    if (onProject && text === SHOW_UNITS && screen?.id) router.push(`/units/${screen.id}/map`);
+    // Straight to the calculator; it picks a unit itself if none is chosen.
+    if ((onProject || bookable) && text === SEE_PLAN) return void router.push("/money/calculator");
     // Avatar off: no advisor to wait for, so the buttons act directly.
     if (dismissed) {
       const route = DIRECT_ROUTES[text];
       if (route) return void router.push(route);
-      if (text === BOOK_PLOT && picked) return void (useSession.getState().bookPlot(picked.id) && router.push("/booking"));
+      if (text === BOOK_UNIT && picked) return void (useSession.getState().bookUnit(picked.id) && router.push("/booking"));
     }
-    // Name the plot, so the Land Advisor books the one on screen.
-    if (text === BOOK_PLOT && picked) return void send(`Book plot ${picked.plotNo} for me.`);
+    // Name the unit, so the Property Advisor books the one on screen.
+    if (text === BOOK_UNIT && picked) return void send(`Book unit ${picked.unitNo} for me.`);
     void send(text);
   };
 
@@ -344,8 +342,8 @@ export function JourneyShell({ children }: { children: ReactNode }) {
                   <span className="truncate font-display text-[16.5px] font-semibold tracking-tight">{screen ? VIEW_LABEL[screen.view] : ""}</span>
                 ) : (
                   <>
-                    <Logo className="h-7" />
-                    <span className="border-l border-line pl-1.5 font-display text-[15px] font-semibold tracking-tight">Land Advisor</span>
+                    <Logo className="w-28" />
+                    <span className="border-l border-line pl-1.5 font-display text-[15px] font-semibold tracking-tight">Property Advisor</span>
                   </>
                 )}
               </div>
@@ -408,8 +406,8 @@ export function JourneyShell({ children }: { children: ReactNode }) {
           <button onClick={toAdvisor} className="shrink-0 border-t border-line bg-card px-4 py-2.5 text-left" aria-label="Back to the advisor">
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-verd">
               <span className={`h-1.5 w-1.5 rounded-full bg-verd ${busy ? "animate-pulse" : ""}`} />
-              {busy ? (running?.kind === "tool" ? `${running.tool.name.replace("_", " ")}…` : "Land Advisor is thinking…") : "Land Advisor"}
-              <span className="ml-auto font-medium normal-case tracking-normal text-ink-soft">{mode === "avatar" && !dismissed ? "Open Land Advisor" : "Open chat"}</span>
+              {busy ? (running?.kind === "tool" ? `${running.tool.name.replace("_", " ")}…` : "Property Advisor is thinking…") : "Property Advisor"}
+              <span className="ml-auto font-medium normal-case tracking-normal text-ink-soft">{mode === "avatar" && !dismissed ? "Open Property Advisor" : "Open chat"}</span>
             </div>
             {lastAgent?.kind === "agent" && <p className="mt-1 line-clamp-2 text-[13.5px] leading-snug text-ink">{lastAgent.text}</p>}
           </button>
