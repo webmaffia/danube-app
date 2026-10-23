@@ -8,7 +8,7 @@
 :root {
   --ink: #2b2b2b;
   --ink-soft: #555555;
-  --paper: #fbf7ef;
+  --paper: #f8f9fb;
   --card: #ffffff;
   --line: #e9e0d0;
   --verd: #555555;
@@ -21,7 +21,7 @@
   --muted: #929292;
   --charcoal: #555555;
 
-  --brand-gradient: linear-gradient(#fbf7ef, #fbf7ef);
+  --brand-gradient: linear-gradient(#f8f9fb, #f8f9fb);
 
   --app-max: 428px;
   color-scheme: light;
@@ -85,7 +85,7 @@ body {
 
 body {
   margin: 0;
-  background: #efe7d8;
+  background: #f8f9fb;
   color: var(--ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;

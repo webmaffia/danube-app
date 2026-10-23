@@ -329,10 +329,10 @@ export function JourneyShell({ children }: { children: ReactNode }) {
     // Any touch counts as activity: reopen a paused avatar before they speak.
     <main className={`relative flex h-full flex-col ${immersive ? "bg-site" : ""}`} onPointerDown={() => avatar.wake()}>
       {!immersive && (
-        <header className="flex shrink-0 items-center justify-between gap-2 border-b border-gold/15 bg-paper/80 px-3 py-2.5 backdrop-blur-xl">
+        <header className="flex shrink-0 items-center justify-between gap-2 border-b border-white/10 bg-site px-3 py-2.5 text-site-ink">
           <div className="flex min-w-0 items-center gap-1">
             {onScreen && (
-              <button onClick={goBack} className="-ml-1 rounded-full p-1.5 text-ink-soft" aria-label="Back">
+              <button onClick={goBack} className="-ml-1 rounded-full p-1.5 text-site-ink" aria-label="Back">
                 <BackIcon className="h-5 w-5" />
               </button>
             )}
@@ -342,7 +342,7 @@ export function JourneyShell({ children }: { children: ReactNode }) {
                   <span className="truncate font-display text-[21px] font-semibold tracking-tight">{screen ? VIEW_LABEL[screen.view] : ""}</span>
                 ) : (
                   <>
-                    <Logo className="w-28" />
+                    <Logo className="w-28" onDark />
                     <span className="border-l border-gold/30 pl-2 font-display text-[18px] font-semibold italic tracking-tight text-gold">Property Advisor</span>
                   </>
                 )}
@@ -352,7 +352,7 @@ export function JourneyShell({ children }: { children: ReactNode }) {
           <div className="flex shrink-0 items-center gap-1.5">
             <button
               onClick={humanRequest}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-gold/50 bg-gold/15 text-gold backdrop-blur-md"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-site-ink"
               aria-label="Talk to a human advisor"
               title="Talk to a human advisor"
             >
