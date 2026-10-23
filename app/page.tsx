@@ -17,13 +17,13 @@ export default function Landing() {
   return (
     <main className="relative flex min-h-full flex-col overflow-hidden bg-site text-white">
       {/* Danube project photos; the gradient and skyline show while they load or if none is set. */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_70%_at_50%_0%,#173e62_0%,#0d2740_45%,#050e17_85%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_70%_at_50%_0%,#555555_0%,#333333_45%,#1a1a1a_85%)]" />
       <Skyline className="pointer-events-none absolute inset-x-0 bottom-0 h-[60%] w-full text-[#BDA588]" opacity={0.35} />
       <HeroSlider slides={SLIDES} />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/40 via-black/10 to-black/85" />
 
       <header className="relative z-10 flex items-start justify-between px-6 pt-6">
-        <Logo className="w-48" priority />
+        <Logo className="w-48" priority onDark />
       </header>
 
       <section className="relative z-10 mt-auto px-6 pb-4">

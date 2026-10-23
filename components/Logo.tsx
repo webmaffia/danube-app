@@ -1,11 +1,10 @@
 import Image from "next/image";
 
-// The Danube wordmark: red and white on transparent, for the app's dark navy
-// brand background. Source: danubeproperties.com.
-export function Logo({ className = "w-40", priority = false }: { className?: string; priority?: boolean }) {
+// The Danube wordmark: red and white on transparent. `onDark` keeps the white "PROPERTIES" for photo/dark hero areas; the default is the charcoal version for light screens. Source: danubeproperties.com.
+export function Logo({ className = "w-40", priority = false, onDark = false }: { className?: string; priority?: boolean; onDark?: boolean }) {
   return (
     <Image
-      src="/brand/danube-logo.png"
+      src={onDark ? "/brand/danube-logo.png" : "/brand/danube-logo-dark.png"}
       alt="Danube Properties"
       width={373}
       height={20}

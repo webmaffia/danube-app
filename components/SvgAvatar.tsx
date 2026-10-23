@@ -11,10 +11,10 @@ export function SvgAvatar({ speaking, compact = false }: { speaking: boolean; co
       <svg viewBox="0 0 300 360" className="absolute inset-x-0 bottom-0 mx-auto h-[92%]" role="img" aria-label="Property Advisor">
         <g className="svg-body">
           {/* shoulders and blazer */}
-          <path d="M40 360 C44 290 92 262 150 262 C208 262 256 290 260 360 Z" fill="#173e62" />
+          <path d="M40 360 C44 290 92 262 150 262 C208 262 256 290 260 360 Z" fill="#555555" />
           <path d="M150 262 L126 300 L150 360 L174 300 Z" fill="#E6EDE9" />
           <path d="M150 272 L140 292 L150 330 L160 292 Z" fill="#BDA588" />
-          <path d="M112 270 L150 262 L130 318 Z M188 270 L150 262 L170 318 Z" fill="#0d2740" />
+          <path d="M112 270 L150 262 L130 318 Z M188 270 L150 262 L170 318 Z" fill="#333333" />
           {/* neck */}
           <path d="M132 214 L132 262 C140 272 160 272 168 262 L168 214 Z" fill="#A5704D" />
           {/* head */}

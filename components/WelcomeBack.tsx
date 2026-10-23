@@ -61,16 +61,16 @@ export function WelcomeBack() {
     <div
       role="dialog"
       aria-label="Welcome back"
-      className="absolute inset-0 z-30 flex flex-col justify-center px-6 py-8"
+      className="absolute inset-0 z-30 flex flex-col justify-center px-6 py-8 text-ink"
       style={{ background: "var(--brand-gradient), var(--paper)" }}
     >
       <div className="mb-6 flex justify-center">
         <Logo className="w-48" />
       </div>
       <h2 className="text-center font-display text-[40px] font-medium leading-none tracking-tight">Welcome back, <span className="italic text-gold">{summary.first}</span></h2>
-      <p className="mx-auto mt-2 max-w-[30ch] text-center text-[14px] leading-relaxed text-white/70">Here&rsquo;s where things stand in your journey:</p>
+      <p className="mx-auto mt-2 max-w-[30ch] text-center text-[14px] leading-relaxed text-ink-soft">Here&rsquo;s where things stand in your journey:</p>
 
-      <ul className="mt-6 space-y-4 rounded-3xl border border-gold/20 bg-card px-5 py-5 shadow-[0_24px_60px_-30px_rgb(0_0_0/0.9)]">
+      <ul className="mt-6 space-y-4 rounded-3xl border border-gold/20 bg-card px-5 py-5 shadow-[0_24px_60px_-30px_rgb(0_0_0/0.25)]">
         {summary.steps.map((step) => (
           <li key={step.label} className="flex items-center gap-3 text-[15px]">
             <span
@@ -81,8 +81,8 @@ export function WelcomeBack() {
             >
               ✓
             </span>
-            <span className={step.done ? "text-white" : "text-white/45"}>{step.label}</span>
-            {step.done && step.note && <span className="ml-auto text-[12px] text-white/50">{step.note}</span>}
+            <span className={step.done ? "text-ink" : "text-muted"}>{step.label}</span>
+            {step.done && step.note && <span className="ml-auto text-[12px] text-muted">{step.note}</span>}
           </li>
         ))}
       </ul>
@@ -95,7 +95,7 @@ export function WelcomeBack() {
           useSession.getState().reset();
           router.push("/register");
         }}
-        className="mt-3 w-full text-center text-[12px] font-medium text-white/65 underline underline-offset-2"
+        className="mt-3 w-full text-center text-[12px] font-medium text-ink-soft underline underline-offset-2"
       >
         Start over instead
       </button>

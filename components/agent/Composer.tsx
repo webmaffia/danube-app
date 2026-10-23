@@ -38,11 +38,11 @@ export function Composer({
   // Same glass look on every screen; only the wrapper differs (floating over
   // the avatar vs. a bar under the app screens).
   const s = {
-    wrap: overlay ? "shrink-0 px-3 pb-3 pt-1" : "shrink-0 border-t border-gold/15 bg-black/40 px-3 pb-3 pt-2.5 backdrop-blur-xl",
-    chip: "border border-gold/35 bg-white/10 text-white backdrop-blur-md active:bg-white/20",
-    input: "rounded-full border border-white/30 bg-black/25 text-white placeholder:text-white/70 backdrop-blur-md focus:border-gold/80",
-    send: "bg-gold text-site",
-    mic: listening ? "bg-gold text-site" : speaking ? "bg-white text-site" : "bg-white/20 text-white border border-white/45 backdrop-blur-md",
+    wrap: overlay ? "shrink-0 px-3 pb-3 pt-1" : "shrink-0 border-t border-line bg-card px-3 pb-3 pt-2.5",
+    chip: overlay ? "border border-gold/35 bg-white/10 text-white backdrop-blur-md active:bg-white/20" : "border border-line bg-paper text-ink active:bg-line",
+    input: overlay ? "rounded-full border border-white/30 bg-black/25 text-white placeholder:text-white/70 backdrop-blur-md focus:border-gold/80" : "rounded-full border border-line bg-paper text-ink placeholder:text-muted focus:border-gold",
+    send: "bg-charcoal text-white",
+    mic: listening ? "bg-gold text-site" : speaking ? "bg-white text-site" : overlay ? "bg-white/20 text-white border border-white/45 backdrop-blur-md" : "bg-paper text-charcoal border border-line",
   };
 
   return (

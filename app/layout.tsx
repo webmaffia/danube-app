@@ -1,10 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Cormorant_Garamond } from "next/font/google";
+import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import { AppFrame } from "@/components/AppFrame";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
-const display = Cormorant_Garamond({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-cormorant", display: "swap" });
+const display = localFont({
+  src: [
+    { path: "./fonts/LibertinusSans-Regular.ttf", weight: "400", style: "normal" },
+    { path: "./fonts/LibertinusSans-Bold.ttf", weight: "700", style: "normal" },
+  ],
+  variable: "--font-libertinus",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Danube Property Advisor (prototype)",
@@ -15,7 +23,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#07131f",
+  themeColor: "#fbf7ef",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

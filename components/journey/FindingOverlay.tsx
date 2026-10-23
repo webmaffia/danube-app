@@ -54,16 +54,16 @@ export function FindingOverlay() {
     <div className="absolute inset-0 z-50 flex flex-col items-center justify-center px-8 text-center" style={{ background: "var(--brand-gradient), var(--paper)" }} role="status" aria-live="polite">
       <Logo className="absolute left-6 top-6 w-36" />
       <div className="relative h-28 w-28">
-        <span className="absolute inset-0 rounded-full border-2 border-white/10" />
+        <span className="absolute inset-0 rounded-full border-2 border-line" />
         <span className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-gold [animation-duration:1.4s]" />
-        <span className="absolute inset-3 animate-spin rounded-full border-2 border-transparent border-b-[#3b82c4] [animation-direction:reverse] [animation-duration:2.2s]" />
+        <span className="absolute inset-3 animate-spin rounded-full border-2 border-transparent border-b-[#ed1c24] [animation-direction:reverse] [animation-duration:2.2s]" />
         <span className="absolute inset-[42%] rounded-full bg-gold/90 shadow-[0_0_24px_6px_rgba(189,165,136,0.45)]" />
       </div>
-      <h2 className="mt-8 font-display text-[24px] font-semibold leading-tight tracking-tight text-white">We&rsquo;re finding the best options for you…</h2>
+      <h2 className="mt-8 font-display text-[24px] font-semibold leading-tight tracking-tight text-ink">We&rsquo;re finding the best options for you…</h2>
       <ul className="mt-5 space-y-2 text-[14px]">
         {STEPS.map((s, i) => (
-          <li key={s} className={`flex items-center justify-center gap-2 transition-colors duration-500 ${i <= step ? "text-white" : "text-white/35"}`}>
-            <span className={`h-1.5 w-1.5 rounded-full ${i < step ? "bg-gold" : i === step ? "animate-pulse bg-gold" : "bg-white/25"}`} />
+          <li key={s} className={`flex items-center justify-center gap-2 transition-colors duration-500 ${i <= step ? "text-ink" : "text-muted"}`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${i < step ? "bg-gold" : i === step ? "animate-pulse bg-gold" : "bg-line"}`} />
             {s}
           </li>
         ))}

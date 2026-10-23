@@ -13,6 +13,7 @@ import { SITE_MAPS, flushScroll } from "@/lib/maps";
 import { Badge, Button, Card, Disclosure, Section, Stat } from "@/components/journey/ui";
 import { Skyline, UnitGrid } from "@/components/Skyline";
 import { FilmStrip } from "@/components/journey/FilmStrip";
+import { Gallery } from "@/components/journey/Gallery";
 import { PinIcon } from "@/components/icons";
 
 export default function ProjectDetail() {
@@ -52,7 +53,7 @@ export default function ProjectDetail() {
           onFinished={() => markIntroSeen(project.id)}
         />
       ) : (
-        <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-[#173e62] to-[#07131f] text-site-ink">
+        <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-[#555555] to-[#222222] text-site-ink">
           {project.image ? (
             <Image src={project.image} alt={project.name} fill sizes="428px" className="object-cover" priority />
           ) : (
@@ -76,12 +77,24 @@ export default function ProjectDetail() {
         </p>
       </div>
 
-      <div className="mx-4 grid grid-cols-4 gap-2 rounded-2xl border border-gold/20 bg-card px-3.5 py-3.5">
-        <Stat label={soldOut ? "Was from" : "From"} value={entryTicket(project) > 0 ? aedShort(entryTicket(project), 1) : "n/s"} />
-        <Stat label="Handover" value={project.handover.replace(/ 20(\d\d)/, " '$1")} />
-        <Stat label="Available" value={soldOut ? "Sold out" : `${available}/${units.length}`} />
-        <Stat label="Hold" value={project.hold.replace(" years", "y")} />
+      <div className="mx-4 overflow-hidden rounded-2xl border border-gold/30 bg-card shadow-[0_12px_30px_-20px_rgb(0_0_0/0.18)]">
+        <div className="flex items-end justify-between gap-3 bg-gold-soft px-4 py-3.5">
+          <div className="min-w-0">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-soft">{soldOut ? "Was from" : "Starting from"}</div>
+            <div className="mt-0.5 font-display text-[34px] font-semibold leading-none tracking-tight text-ink">
+              {entryTicket(project) > 0 ? aedShort(entryTicket(project), 2) : "Not available"}
+            </div>
+          </div>
+          {project.planLabel && <div className="shrink-0 pb-0.5 text-right text-[12px] font-medium text-ink-soft">{project.planLabel}</div>}
+        </div>
+        <div className="grid grid-cols-3 divide-x divide-line px-1 py-3">
+          <Stat label="Handover" value={project.handover.replace(/ 20(\d\d)/, " '$1")} />
+          <Stat label="Available" value={soldOut ? "Sold out" : `${available}/${units.length}`} />
+          <Stat label="Hold" value={project.hold.replace(" years", "y")} />
+        </div>
       </div>
+
+      <Gallery projectId={project.id} projectName={project.name} />
 
       {soldOut ? (
         <Section title="Availability">
@@ -231,7 +244,7 @@ export default function ProjectDetail() {
                 onClick={() => router.push(`/units/${p.id}`)}
                 className="flex items-center gap-3 rounded-2xl border border-line bg-card p-2.5 text-left active:bg-verd-soft"
               >
-                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-[#173e62] to-[#07131f] text-site-ink">
+                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-[#555555] to-[#222222] text-site-ink">
                   {p.image ? (
                     <Image src={p.image} alt={p.name} fill sizes="56px" className="object-cover" />
                   ) : (

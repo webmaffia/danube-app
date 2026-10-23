@@ -50,7 +50,7 @@ function CalculatorFor({ unit }: { unit: Unit }) {
       />
 
       <Card className="mx-4 mt-4 overflow-hidden">
-        <div className="bg-linear-to-br from-[#143a5c] to-site px-5 py-5 text-site-ink">
+        <div className="bg-linear-to-br from-[#555555] to-site px-5 py-5 text-site-ink">
           <div className="text-[10.5px] font-semibold uppercase tracking-[0.24em] text-gold">Monthly instalment</div>
           <div className="mt-1.5 font-display text-[46px] font-medium leading-none tracking-tight">{aed(r.monthly_instalment)}</div>
           <div className="mt-1.5 text-[12px] text-site-ink/70">

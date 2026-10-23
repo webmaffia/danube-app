@@ -1,28 +1,30 @@
 @import "tailwindcss";
 
 /*
- * Danube brand: deep navy background, white text, champagne gold
- * buttons. One dark theme; token names are historical (verd is now the blue
- * accent), so every screen picks the palette up from here.
+ * Danube brand: white and light-grey surfaces, charcoal text, charcoal actions,
+ * Sand Gold accents. Token names are historical (verd is now the charcoal accent),
+ * so every screen picks the palette up from here.
  */
 :root {
-  --ink: #f4f7fb;
-  --ink-soft: #9fb0c4;
-  --paper: #07131f;
-  --card: #0b1d2f;
-  --line: #1c3350;
-  --verd: #6aa6dc;
-  --verd-soft: #112f4d;
-  --gold: #c9b08e;
-  --gold-soft: #2b2519;
-  --site: #050e17;
-  --site-ink: #f4f7fb;
-  --danger: #ff7a6b;
+  --ink: #2b2b2b;
+  --ink-soft: #555555;
+  --paper: #fbf7ef;
+  --card: #ffffff;
+  --line: #e9e0d0;
+  --verd: #555555;
+  --verd-soft: #f3eadb;
+  --gold: #bda588;
+  --gold-soft: #f3eadb;
+  --site: #222222;
+  --site-ink: #ffffff;
+  --danger: #ed1c24;
+  --muted: #929292;
+  --charcoal: #555555;
 
-  --brand-gradient: radial-gradient(130% 60% at 50% 0%, #173e62 0%, #0d2740 42%, #07131f 78%);
+  --brand-gradient: linear-gradient(#fbf7ef, #fbf7ef);
 
   --app-max: 428px;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 @theme inline {
@@ -38,7 +40,9 @@
   --color-site: var(--site);
   --color-site-ink: var(--site-ink);
   --color-danger: var(--danger);
-  --font-display: var(--font-cormorant), "Times New Roman", serif;
+  --color-muted: var(--muted);
+  --color-charcoal: var(--charcoal);
+  --font-display: var(--font-libertinus), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui;
 }
 
@@ -53,22 +57,18 @@ body {
  * gold button picks it up. (Tinted variants such as bg-gold/90 stay flat.)
  */
 .bg-gold {
-  background-image: linear-gradient(135deg, #f1e4cc 0%, #dcc6a3 30%, #c4a97f 58%, #8a6f4b 100%);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.5),
-    inset 0 -1px 0 rgb(0 0 0 / 0.15),
-    0 8px 24px -8px rgb(201 176 142 / 0.45);
+  background-image: linear-gradient(135deg, #d6c4ac 0%, #bda588 55%, #a58c6d 100%);
+  box-shadow: 0 8px 24px -8px rgb(189 165 136 / 0.5);
 }
 
 /* Premium surfaces: soft glass cards with a hairline highlight. */
 .rounded-2xl.border.bg-card {
-  background-image: linear-gradient(160deg, rgb(255 255 255 / 0.05) 0%, rgb(255 255 255 / 0) 55%);
-  border-color: rgb(201 176 142 / 0.16);
-  box-shadow: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 18px 40px -22px rgb(0 0 0 / 0.7);
+  border-color: var(--line);
+  box-shadow: 0 12px 30px -20px rgb(0 0 0 / 0.18);
 }
 
 ::selection {
-  background: rgb(201 176 142 / 0.35);
+  background: rgb(237 28 36 / 0.2);
 }
 
 /* Fine grain over the app frame for a printed, tactile finish. */
@@ -78,14 +78,14 @@ body {
   inset: 0;
   pointer-events: none;
   z-index: 50;
-  opacity: 0.05;
-  mix-blend-mode: overlay;
+  opacity: 0.03;
+  mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 body {
   margin: 0;
-  background: #040b12;
+  background: #efe7d8;
   color: var(--ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -143,10 +143,10 @@ body {
     height: min(926px, calc(100dvh - 48px));
     border-radius: 36px;
     box-shadow:
-      0 0 0 1px rgb(201 176 142 / 0.35),
-      0 0 0 10px #0a1a28,
-      0 0 0 11px rgb(201 176 142 / 0.18),
-      0 40px 100px rgb(0 0 0 / 0.6);
+      0 0 0 1px rgb(189 165 136 / 0.5),
+      0 0 0 10px #ffffff,
+      0 0 0 11px rgb(189 165 136 / 0.35),
+      0 40px 100px rgb(0 0 0 / 0.18);
   }
 
   .app-shell--wide {

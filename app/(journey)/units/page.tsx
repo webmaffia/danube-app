@@ -56,7 +56,7 @@ export default function Recommendations() {
       )}
 
       <div className="mt-4 px-4">
-        <button onClick={() => void send("Can you compare these for me?")} className="w-full rounded-full border border-gold/40 bg-white/[0.03] py-3.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-gold">
+        <button onClick={() => void send("Can you compare these for me?")} className="w-full rounded-full border border-gold/40 bg-transparent py-3.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-gold">
           Ask the Property Advisor to compare
         </button>
       </div>
@@ -113,7 +113,7 @@ function TopPick({ p, onOpen, overrides }: { p: SearchResult; onOpen: () => void
         <p className="text-[14px] leading-snug text-ink/90">{project?.hook}</p>
         <div className="mt-3 flex items-center justify-between text-[13px]">
           <span className="font-semibold">{p.fit_score}% profile fit</span>
-          <span className="font-semibold text-[#ff8f7a]">
+          <span className="font-semibold text-danger">
             {taken}/{units.length} units booked
           </span>
         </div>
@@ -168,7 +168,7 @@ function ProjectRow({ project, onOpen }: { project: Project; onOpen: () => void 
 function Thumb({ id, image, sizes, priority = false }: { id: string; image?: string; sizes: string; priority?: boolean }) {
   if (image) return <Image src={image} alt="" fill sizes={sizes} priority={priority} className="object-cover" />;
   return (
-    <div className="absolute inset-0 bg-gradient-to-br from-[#173e62] to-[#07131f] text-white">
+    <div className="absolute inset-0 bg-gradient-to-br from-[#555555] to-[#222222] text-white">
       <Skyline className="absolute inset-0 h-full w-full" opacity={0.3} />
       <UnitGrid className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-80 ${id ? "h-1/2" : ""}`} />
     </div>

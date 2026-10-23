@@ -36,9 +36,9 @@ export function Card({ children, className = "" }: { children: ReactNode; classN
 
 export function Stat({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
   return (
-    <div className="min-w-0">
-      <div className="text-[11px] font-medium uppercase tracking-wider text-ink-soft">{label}</div>
-      <div className="mt-0.5 truncate font-display text-[21px] font-semibold tracking-tight">{value}</div>
+    <div className="min-w-0 px-3 text-center">
+      <div className="text-[10.5px] font-medium uppercase tracking-wider text-muted">{label}</div>
+      <div className="mt-1 font-display text-[19px] font-semibold leading-tight tracking-tight">{value}</div>
       {hint && <div className="text-[11px] text-ink-soft">{hint}</div>}
     </div>
   );
@@ -75,9 +75,9 @@ export function Button({
   className?: string;
 }) {
   const styles = {
-    primary: "bg-gold text-site",
-    secondary: "border border-gold/40 bg-white/5 text-white backdrop-blur-md hover:bg-white/10 active:bg-white/15",
-    gold: "bg-gold text-site",
+    primary: "bg-charcoal text-white ring-1 ring-inset ring-white/15",
+    secondary: "border border-charcoal/40 bg-transparent text-charcoal hover:bg-charcoal/5 active:bg-charcoal/10",
+    gold: "bg-charcoal text-white",
   }[variant];
   const sizing = size === "sm" ? "h-9 rounded-full px-4 text-[12px] tracking-[0.04em]" : "h-[52px] rounded-full px-6 text-[13px] uppercase tracking-[0.14em]";
   const cls = `flex items-center justify-center gap-2 font-semibold transition duration-300 hover:brightness-110 active:scale-[0.98] disabled:opacity-40 ${sizing} ${styles} ${className}`;
@@ -101,7 +101,7 @@ export function Button({
  * sits at the bottom when the content is short.
  */
 export function StickyBar({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={`sticky bottom-0 z-10 mt-auto flex shrink-0 flex-col gap-2 border-t border-gold/10 bg-paper/80 px-4 pb-3 pt-4 backdrop-blur-xl ${className}`}>{children}</div>;
+  return <div className={`sticky bottom-0 z-10 mt-auto flex shrink-0 flex-col gap-2 border-t border-line bg-paper/90 px-4 pb-3 pt-4 backdrop-blur-xl ${className}`}>{children}</div>;
 }
 
 export function Badge({ children, tone = "verd" }: { children: ReactNode; tone?: "verd" | "gold" | "muted" }) {
