@@ -14,7 +14,26 @@ import { Badge, Button, Card, Disclosure, Section, Stat } from "@/components/jou
 import { Skyline, UnitGrid } from "@/components/Skyline";
 import { FilmStrip } from "@/components/journey/FilmStrip";
 import { Gallery } from "@/components/journey/Gallery";
+import { PlaceIcon } from "@/components/journey/PlaceIcon";
 import { PinIcon } from "@/components/icons";
+
+function Check({ className = "" }: { className?: string }) {
+  return (
+    <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gold-soft text-gold ${className}`} aria-hidden>
+      <svg viewBox="0 0 16 16" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 8.5l3.2 3L13 4.5" />
+      </svg>
+    </span>
+  );
+}
+
+const JUMPS = [
+  { id: "plan", label: "Payment plan" },
+  { id: "travel", label: "Getting around" },
+  { id: "location", label: "Location" },
+  { id: "features", label: "What you get" },
+  { id: "paperwork", label: "Paperwork" },
+];
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
@@ -34,7 +53,6 @@ export default function ProjectDetail() {
   const soldOut = project.availability === "sold_out";
   const fit = lastSearch.find((s) => s.id === project.id);
   const ladder = [...project.connectivity].sort((a, b) => a.minutes - b.minutes);
-  const maxMin = Math.max(...ladder.map((c) => c.minutes));
   const title = lookupKnowledge("title_approvals", project.id);
   const timeline = lookupKnowledge("timeline", project.id);
   const amenities = lookupKnowledge("amenities", project.id);
@@ -94,6 +112,18 @@ export default function ProjectDetail() {
         </div>
       </div>
 
+      <nav aria-label="Jump to a section" className="mt-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]">
+        {JUMPS.map((j) => (
+          <button
+            key={j.id}
+            onClick={() => document.getElementById(j.id)?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            className="shrink-0 rounded-full border border-gold/40 bg-card px-3.5 py-1.5 text-[12.5px] font-medium text-ink-soft active:bg-gold-soft"
+          >
+            {j.label}
+          </button>
+        ))}
+      </nav>
+
       <Gallery projectId={project.id} projectName={project.name} />
 
       {soldOut ? (
@@ -108,15 +138,31 @@ export default function ProjectDetail() {
           </Card>
         </Section>
       ) : (
-      <Section title="The 1% payment plan">
-        <Card className="px-3.5 py-3">
-          <p className="text-[13.5px] leading-snug">
-            Around 20% down, then 1% of the price a month while the building is built, and the balance on completion ({project.handover}).
-            {project.plan.confirmed ? " These are the terms on the project page." : " This project's page doesn't publish its exact terms, so the schedule is indicative."} See what it comes to for a unit in the calculator.
-          </p>
-          <Button variant="secondary" size="sm" className="mt-2.5" onClick={() => router.push("/money/calculator")}>
-            Open the calculator
-          </Button>
+      <Section id="plan" title="The 1% payment plan">
+        <Card className="overflow-hidden">
+          <div className="grid grid-cols-3 divide-x divide-line bg-gold-soft/60 py-4 text-center">
+            <div className="px-2">
+              <div className="font-display text-[26px] font-semibold leading-none">20%</div>
+              <div className="mt-1.5 text-[11px] font-medium uppercase tracking-wider text-muted">Down</div>
+            </div>
+            <div className="px-2">
+              <div className="font-display text-[26px] font-semibold leading-none text-gold">1%</div>
+              <div className="mt-1.5 text-[11px] font-medium uppercase tracking-wider text-muted">Every month</div>
+            </div>
+            <div className="px-2">
+              <div className="font-display text-[26px] font-semibold leading-none">Rest</div>
+              <div className="mt-1.5 text-[11px] font-medium uppercase tracking-wider text-muted">On handover</div>
+            </div>
+          </div>
+          <div className="px-4 py-3.5">
+            <p className="text-[13.5px] leading-relaxed text-ink-soft">
+              About 20% down, then 1% of the price a month while the building is built, and the balance on completion ({project.handover}).
+              {project.plan.confirmed ? " These are the terms on the project page." : " This project's page doesn't publish its exact terms, so the schedule is indicative."}
+            </p>
+            <Button variant="secondary" size="sm" className="mt-3" onClick={() => router.push("/money/calculator")}>
+              Open the calculator
+            </Button>
+          </div>
         </Card>
       </Section>
       )}
@@ -125,9 +171,10 @@ export default function ProjectDetail() {
         <Section title="Notes from the project page">
           <Card className="divide-y divide-line">
             {project.notes.map((n) => (
-              <p key={n} className="px-3.5 py-2.5 text-[13px] leading-snug">
-                {n}
-              </p>
+              <div key={n} className="flex items-start gap-3 px-3.5 py-3">
+                <Check className="mt-px" />
+                <p className="text-[13.5px] leading-snug">{n}</p>
+              </div>
             ))}
           </Card>
         </Section>
@@ -148,31 +195,24 @@ export default function ProjectDetail() {
         </Section>
       )}
 
-      <Section title="Getting around (travel time)">
-        <Card className="px-3.5 py-3">
-          <ol className="relative">
-            <span className="absolute bottom-2 left-[5px] top-2 w-px bg-line" />
+      <Section id="travel" title="Getting around">
+        <div className="rounded-xl bg-[#3a3f4b] px-3 py-6">
+          <p className="mb-5 text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-[#9a9fa9]">Travel time from {project.name}</p>
+          <ul className="grid grid-cols-3 gap-x-2 gap-y-7">
             {ladder.map((c) => (
-              <li key={c.label} className="relative flex items-start gap-3 py-1.5">
-                <span className="relative mt-1.5 h-[11px] w-[11px] shrink-0 rounded-full border-2 border-verd bg-card" />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="truncate text-[13.5px] font-medium">{c.label}</span>
-                    <span className="shrink-0 text-[13.5px] font-semibold">{c.minutes} min</span>
-                  </div>
-                  <div className="mt-1 h-1 rounded-full bg-line">
-                    <div className="h-1 rounded-full bg-verd/70" style={{ width: `${Math.max(4, (c.minutes / maxMin) * 100)}%` }} />
-                  </div>
-                  {c.note && <div className="mt-0.5 text-[11.5px] text-ink-soft">{c.note}</div>}
-                </div>
+              <li key={c.label} className="flex flex-col items-center text-center">
+                <PlaceIcon label={c.label} className="h-10 w-10 text-gold" />
+                <div className="mt-3 font-display text-[13px] font-semibold leading-snug text-[#e0cfb0]">{c.label}</div>
+                <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#a8adb7]">{c.minutes} min</div>
+                {c.note && <div className="mt-0.5 text-[10px] leading-tight text-[#8f949e]">{c.note}</div>}
               </li>
             ))}
-          </ol>
-        </Card>
+          </ul>
+        </div>
       </Section>
 
       {SITE_MAPS[project.id] && (
-        <div id="location" className="scroll-mt-2">
+        <div id="location" className="scroll-mt-3">
           <Section title="Location">
             <Card className="overflow-hidden">
               <iframe
@@ -198,11 +238,11 @@ export default function ProjectDetail() {
         </div>
       )}
 
-      <Section title="What you get">
+      <Section id="features" title="What you get">
         <ul className="grid gap-2">
           {project.features.map((f) => (
-            <li key={f} className="flex gap-3 rounded-2xl border border-line bg-card px-3.5 py-3 text-[13.5px] leading-snug">
-              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gold" />
+            <li key={f} className="flex items-start gap-3 rounded-2xl border border-line bg-card px-3.5 py-3 text-[13.5px] leading-snug shadow-[0_10px_28px_-24px_rgb(0_0_0/0.25)]">
+              <Check className="mt-px" />
               {f}
             </li>
           ))}
@@ -213,26 +253,32 @@ export default function ProjectDetail() {
         <Section title="Amenities">
           <Card className="divide-y divide-line">
             {amenities.map((c) => (
-              <p key={c.text} className="px-3.5 py-2.5 text-[13px] leading-snug">
-                {c.text}
-              </p>
+              <div key={c.text} className="flex items-start gap-3 px-3.5 py-3">
+                <Check className="mt-px" />
+                <p className="text-[13.5px] leading-snug">{c.text}</p>
+              </div>
             ))}
           </Card>
         </Section>
       )}
 
-      <Section title="Paperwork and timeline">
-        <Card className="divide-y divide-line">
-          <div className="px-3.5 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-ink-soft">Registration</div>
-            <div className="mt-0.5 text-[13.5px] font-semibold">{project.rera_no}</div>
+      <Section id="paperwork" title="Paperwork and timeline">
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-gold/40 bg-gold-soft px-4 py-3.5">
+          <div className="min-w-0">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-ink-soft">Registration (RERA)</div>
+            <div className="mt-0.5 text-[15px] font-semibold">{project.rera_no}</div>
           </div>
+          <Check className="h-7 w-7" />
+        </div>
+        <ol className="relative mt-4 pl-1">
+          <span className="absolute bottom-2 left-[8px] top-2 w-px bg-line" />
           {[...title, ...timeline].map((c) => (
-            <p key={c.text} className="px-3.5 py-2.5 text-[13px] leading-snug">
-              {c.text}
-            </p>
+            <li key={c.text} className="relative flex items-start gap-3 py-2">
+              <span className="relative mt-1.5 h-[11px] w-[11px] shrink-0 border-2 border-gold bg-card" />
+              <p className="text-[13.5px] leading-snug">{c.text}</p>
+            </li>
           ))}
-        </Card>
+        </ol>
       </Section>
 
       {PROJECTS.length > 1 && (
@@ -281,12 +327,12 @@ export default function ProjectDetail() {
 
       {/* Pinned to the bottom of the screen while scrolling; the avatar tile floats just above it. */}
       <div className="sticky bottom-0 z-10 grid grid-cols-2 gap-2 border-t border-gold/10 bg-paper/80 px-4 py-3 backdrop-blur-xl">
-        {soldOut ? <Button onClick={() => router.push("/units")}>See projects to book</Button> : <Button onClick={() => router.push(`/units/${project.id}/map`)}>See the unit map</Button>}
+        {soldOut ? <Button onClick={() => router.push("/units")}>More projects</Button> : <Button onClick={() => router.push(`/units/${project.id}/map`)}>Unit map</Button>}
         <Button variant="secondary" onClick={() => {
             avatar.bargeIn();
             void requestHuman();
           }}>
-          Ask the advisor
+          Ask advisor
         </Button>
       </div>
     </div>

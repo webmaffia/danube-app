@@ -16,13 +16,14 @@ export function ScreenTitle({ eyebrow, title, sub, right }: { eyebrow?: string; 
   );
 }
 
-export function Section({ title, children, className = "" }: { title?: string; children: ReactNode; className?: string }) {
+export function Section({ title, children, className = "", id }: { title?: string; children: ReactNode; className?: string; id?: string }) {
   return (
-    <section className={`px-4 pt-5 ${className}`}>
+    <section id={id} className={`scroll-mt-3 px-4 pt-7 ${className}`}>
       {title && (
-        <h2 className="mb-3 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
-          {title}
-          <span className="h-px flex-1 bg-linear-to-r from-gold/30 to-transparent" />
+        <h2 className="mb-4 flex items-center gap-3 font-display text-[20px] font-semibold uppercase leading-none tracking-[0.12em] text-ink">
+          <span className="h-px flex-1 bg-gold/60" />
+          <span className="text-center">{title}</span>
+          <span className="h-px flex-1 bg-gold/60" />
         </h2>
       )}
       {children}
@@ -31,7 +32,7 @@ export function Section({ title, children, className = "" }: { title?: string; c
 }
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={`rounded-2xl border border-line bg-card ${className}`}>{children}</div>;
+  return <div className={`rounded-2xl border border-line bg-card shadow-[0_10px_28px_-22px_rgb(0_0_0/0.25)] ${className}`}>{children}</div>;
 }
 
 export function Stat({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
@@ -79,7 +80,7 @@ export function Button({
     secondary: "border border-charcoal/40 bg-transparent text-charcoal hover:bg-charcoal/5 active:bg-charcoal/10",
     gold: "bg-charcoal text-white",
   }[variant];
-  const sizing = size === "sm" ? "h-9 rounded-full px-4 text-[12px] tracking-[0.04em]" : "h-[52px] rounded-full px-6 text-[13px] uppercase tracking-[0.14em]";
+  const sizing = size === "sm" ? "h-9 rounded-full px-4 text-[12px] tracking-[0.04em]" : "h-[52px] rounded-full px-5 text-[12.5px] uppercase tracking-[0.1em] whitespace-nowrap";
   const cls = `flex items-center justify-center gap-2 font-semibold transition duration-300 hover:brightness-110 active:scale-[0.98] disabled:opacity-40 ${sizing} ${styles} ${className}`;
   if (href) {
     return (
