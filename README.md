@@ -1,4 +1,4 @@
-# Danube Property Advisor (prototype)
+# Danube Property Advisor (prototype) test
 
 A mobile web app where a virtual Property Advisor profiles a buyer, recommends Danube projects in Dubai, answers unit-level questions, takes a sandbox booking token, runs a simulated KYC and walks through Danube's 1% payment plan. Next.js App Router, Tailwind, Zustand, OpenAI for the agent, HeyGen LiveAvatar for the video avatar.
 
