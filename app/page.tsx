@@ -27,8 +27,11 @@ export default function Landing() {
       </header>
 
       <section className="relative z-10 mt-auto px-6 pb-4">
-        <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-[#d9c6a6] [text-shadow:0_1px_6px_rgb(0_0_0/0.6)]">Property Advisor</p>
-        <h1 className="font-display text-[38px] font-semibold leading-[1.04] tracking-tight [text-shadow:0_2px_12px_rgb(0_0_0/0.35)]">
+        <div className="mb-4 flex items-center gap-3">
+          <span className="h-px w-10 bg-gradient-to-r from-[#e6d7bf] to-transparent" />
+          <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[#e0cfb0] [text-shadow:0_1px_6px_rgb(0_0_0/0.6)]">Property Advisor</p>
+        </div>
+        <h1 className="font-display text-[46px] font-medium leading-[0.98] tracking-tight [text-shadow:0_2px_16px_rgb(0_0_0/0.4)]">
           Find a Dubai home worth owning, in one conversation.
         </h1>
         <p className="mt-4 max-w-[36ch] text-[15px] leading-relaxed text-white/90 [text-shadow:0_1px_6px_rgb(0_0_0/0.5)]">

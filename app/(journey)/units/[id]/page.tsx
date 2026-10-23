@@ -69,14 +69,14 @@ export default function ProjectDetail() {
           <Badge tone={soldOut ? "muted" : "verd"}>{soldOut ? availabilityLabel(project) : STATUS_LABEL[project.status]}</Badge>
           {project.illustrative && <Badge tone="gold">Sample pricing</Badge>}
         </div>
-        <h1 className="mt-1 font-display text-[26px] font-semibold leading-tight tracking-tight">{project.name}</h1>
+        <h1 className="mt-2 font-display text-[38px] font-medium leading-[1] tracking-tight">{project.name}</h1>
         <p className="mt-0.5 flex items-center gap-1 text-[13px] text-ink-soft">
           <PinIcon className="h-3.5 w-3.5" />
           {project.location}
         </p>
       </div>
 
-      <div className="grid grid-cols-4 gap-2 border-b border-line bg-card px-4 py-3">
+      <div className="mx-4 grid grid-cols-4 gap-2 rounded-2xl border border-gold/20 bg-card px-3.5 py-3.5">
         <Stat label={soldOut ? "Was from" : "From"} value={entryTicket(project) > 0 ? aedShort(entryTicket(project), 1) : "n/s"} />
         <Stat label="Handover" value={project.handover.replace(/ 20(\d\d)/, " '$1")} />
         <Stat label="Available" value={soldOut ? "Sold out" : `${available}/${units.length}`} />
@@ -188,7 +188,7 @@ export default function ProjectDetail() {
       <Section title="What you get">
         <ul className="grid gap-2">
           {project.features.map((f) => (
-            <li key={f} className="flex gap-2.5 rounded-xl border border-line bg-card px-3 py-2.5 text-[13.5px] leading-snug">
+            <li key={f} className="flex gap-3 rounded-2xl border border-line bg-card px-3.5 py-3 text-[13.5px] leading-snug">
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gold" />
               {f}
             </li>
@@ -243,7 +243,7 @@ export default function ProjectDetail() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="truncate text-[14px] font-semibold">{p.name}</span>
+                    <span className="truncate font-display text-[18px] font-semibold tracking-tight">{p.name}</span>
                     {p.illustrative && <span className="shrink-0 rounded bg-line px-1 py-px text-[9.5px] font-semibold uppercase tracking-wide text-ink-soft">Sample pricing</span>}
                   </div>
                   <p className="mt-0.5 flex items-center gap-1 truncate text-[12.5px] text-ink-soft">
@@ -267,7 +267,7 @@ export default function ProjectDetail() {
       <div className="h-28" />
 
       {/* Pinned to the bottom of the screen while scrolling; the avatar tile floats just above it. */}
-      <div className="sticky bottom-0 z-10 grid grid-cols-2 gap-2 bg-paper/85 px-4 py-3 backdrop-blur">
+      <div className="sticky bottom-0 z-10 grid grid-cols-2 gap-2 border-t border-gold/10 bg-paper/80 px-4 py-3 backdrop-blur-xl">
         {soldOut ? <Button onClick={() => router.push("/units")}>See projects to book</Button> : <Button onClick={() => router.push(`/units/${project.id}/map`)}>See the unit map</Button>}
         <Button variant="secondary" onClick={() => {
             avatar.bargeIn();

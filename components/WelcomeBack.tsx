@@ -67,10 +67,10 @@ export function WelcomeBack() {
       <div className="mb-6 flex justify-center">
         <Logo className="w-48" />
       </div>
-      <h2 className="text-center font-display text-[28px] font-semibold leading-tight tracking-tight">Welcome back, {summary.first}!</h2>
+      <h2 className="text-center font-display text-[40px] font-medium leading-none tracking-tight">Welcome back, <span className="italic text-gold">{summary.first}</span></h2>
       <p className="mx-auto mt-2 max-w-[30ch] text-center text-[14px] leading-relaxed text-white/70">Here&rsquo;s where things stand in your journey:</p>
 
-      <ul className="mt-6 space-y-3.5 rounded-3xl border border-line bg-card px-5 py-5">
+      <ul className="mt-6 space-y-4 rounded-3xl border border-gold/20 bg-card px-5 py-5 shadow-[0_24px_60px_-30px_rgb(0_0_0/0.9)]">
         {summary.steps.map((step) => (
           <li key={step.label} className="flex items-center gap-3 text-[15px]">
             <span

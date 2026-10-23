@@ -102,7 +102,7 @@ export default function Kyc() {
                   setDocType(t);
                   setDocNo("");
                 }}
-                className={`rounded-xl border px-3 py-2.5 text-[13.5px] font-semibold ${docType === t ? "border-verd bg-verd-soft/50 text-ink" : "border-line bg-card text-ink-soft"}`}
+                className={`rounded-xl border px-3 py-2.5 text-[13.5px] font-semibold ${docType === t ? "border-gold bg-gold/10 text-ink" : "border-line bg-card text-ink-soft"}`}
               >
                 {DOC_LABEL[t]}
               </button>
@@ -139,12 +139,12 @@ export default function Kyc() {
       {step === "consent" && (
         <div className="mt-5 flex flex-1 flex-col px-4">
           <Card className="px-4 py-4">
-            <div className="text-[15px] font-semibold">Verify with UAE PASS</div>
+            <div className="font-display text-[24px] font-semibold tracking-tight">Verify with UAE PASS</div>
             <p className="mt-1.5 text-[13px] leading-relaxed text-ink-soft">
               We confirm your name and photo with your consent. Your full document number is never stored: only a masked version is kept.
             </p>
             <label className="mt-3 flex items-start gap-2.5 text-[13px] leading-snug">
-              <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[var(--verd)]" />
+              <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[var(--gold)]" />
               I consent to Danube verifying my identity details through UAE PASS for this booking.
             </label>
           </Card>
@@ -173,7 +173,7 @@ export default function Kyc() {
             if (line.trim().length > 4 && country.trim().length > 1) setStep("liveness");
           }}
         >
-          <p className="rounded-xl bg-verd-soft px-3 py-2 text-[12.5px] text-verd">Identity details received. Confirm your current address.</p>
+          <p className="rounded-xl border border-gold/25 bg-gold-soft px-3.5 py-2.5 text-[12.5px] text-gold">Identity details received. Confirm your current address.</p>
           <Field label="Address">
             <input value={line} onChange={(e) => setLine(e.target.value)} placeholder="Apartment, building, street" className={inputClass} autoComplete="street-address" />
           </Field>
@@ -195,7 +195,7 @@ export default function Kyc() {
 
       {step === "liveness" && (
         <div className="mt-6 flex flex-col items-center px-4 text-center">
-          <div className="relative flex h-52 w-44 items-center justify-center overflow-hidden rounded-[48%] border-4 border-verd bg-site">
+          <div className="relative flex h-52 w-44 items-center justify-center overflow-hidden rounded-[48%] border-[3px] border-gold bg-site shadow-[0_0_50px_-10px_rgba(201,176,142,0.5)]">
             <svg viewBox="0 0 100 120" className="h-40 text-site-ink/50" aria-hidden="true">
               <ellipse cx="50" cy="52" rx="28" ry="34" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" />
               <path d="M20 118 C24 92 38 86 50 86 C62 86 76 92 80 118" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" />
@@ -220,7 +220,7 @@ export default function Kyc() {
               <div key={k} className="flex items-center justify-between px-4 py-2.5 text-[13.5px]">
                 <span className="text-ink-soft">{k}</span>
                 <span className="flex items-center gap-1.5 font-semibold">
-                  <span className="text-verd">✓</span>
+                  <span className="text-gold">✓</span>
                   {v}
                 </span>
               </div>

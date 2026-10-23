@@ -64,8 +64,8 @@ export default function Register() {
           </Link>
         )}
         <div className="flex gap-1.5">
-          <span className="h-1 w-8 rounded-full bg-verd" />
-          <span className={`h-1 w-8 rounded-full ${step === "otp" ? "bg-verd" : "bg-line"}`} />
+          <span className="h-1 w-8 rounded-full bg-gold" />
+          <span className={`h-1 w-8 rounded-full ${step === "otp" ? "bg-gold" : "bg-line"}`} />
         </div>
         <Logo className="ml-auto w-32" />
       </header>
@@ -78,7 +78,8 @@ export default function Register() {
             if (detailsOk) setStep("otp");
           }}
         >
-          <h1 className="font-display text-[30px] font-semibold leading-tight tracking-tight">Let&rsquo;s get you started</h1>
+          <p className="mb-2 text-[10.5px] font-semibold uppercase tracking-[0.24em] text-gold">Welcome</p>
+          <h1 className="font-display text-[42px] font-medium leading-[1] tracking-tight">Let&rsquo;s get you started</h1>
           <p className="mt-2 text-[15px] text-ink-soft">Your advisor will use your name, and a code confirms your number.</p>
 
           <label className="mt-8 block text-[13px] font-medium text-ink-soft">
@@ -89,13 +90,13 @@ export default function Register() {
               onChange={(e) => setName(e.target.value)}
               autoComplete="name"
               placeholder="Your full name"
-              className="mt-1.5 h-13 w-full rounded-xl border border-line bg-card px-4 text-[16px] text-ink outline-none focus:border-verd"
+              className="mt-1.5 h-13 w-full rounded-xl border border-line bg-card px-4 text-[16px] text-ink outline-none transition focus:border-gold focus:shadow-[0_0_0_3px_rgb(201_176_142/0.15)]"
             />
           </label>
 
           <label className="mt-4 block text-[13px] font-medium text-ink-soft">
             Mobile number
-            <div className="mt-1.5 flex h-13 items-center rounded-xl border border-line bg-card focus-within:border-verd">
+            <div className="mt-1.5 flex h-13 items-center rounded-xl border border-line bg-card transition focus-within:border-gold focus-within:shadow-[0_0_0_3px_rgb(201_176_142/0.15)]">
               <span className="border-r border-line px-3.5 text-[16px] text-ink-soft">+971</span>
               <input
                 value={mobile}
@@ -114,7 +115,7 @@ export default function Register() {
             <select
               value={city}
               onChange={(e) => setCity(e.target.value)}
-              className="mt-1.5 h-13 w-full appearance-none rounded-xl border border-line bg-card px-4 text-[16px] text-ink outline-none focus:border-verd"
+              className="mt-1.5 h-13 w-full appearance-none rounded-xl border border-line bg-card px-4 text-[16px] text-ink outline-none focus:border-gold"
             >
               {CITIES.map((c) => (
                 <option key={c}>{c}</option>
@@ -136,7 +137,7 @@ export default function Register() {
           }}
         >
           <div className="flex items-start justify-between gap-3">
-            <h1 className="font-display text-[30px] font-semibold leading-tight tracking-tight">Enter the code</h1>
+            <h1 className="font-display text-[42px] font-medium leading-[1] tracking-tight">Enter the code</h1>
             <SandboxTag />
           </div>
           <p className="mt-2 text-[15px] text-ink-soft">
@@ -157,7 +158,7 @@ export default function Register() {
                 <div
                   key={i}
                   className={`flex h-14 items-center justify-center rounded-xl border bg-card font-display text-2xl font-semibold ${
-                    code[i] ? "border-verd text-ink" : "border-line text-ink-soft"
+                    code[i] ? "border-gold text-gold" : "border-line text-ink-soft"
                   }`}
                 >
                   {code[i] ?? ""}

@@ -329,7 +329,7 @@ export function JourneyShell({ children }: { children: ReactNode }) {
     // Any touch counts as activity: reopen a paused avatar before they speak.
     <main className={`relative flex h-full flex-col ${immersive ? "bg-site" : ""}`} onPointerDown={() => avatar.wake()}>
       {!immersive && (
-        <header className="flex shrink-0 items-center justify-between gap-2 border-b border-line bg-paper/80 px-3 py-2 backdrop-blur">
+        <header className="flex shrink-0 items-center justify-between gap-2 border-b border-gold/15 bg-paper/80 px-3 py-2.5 backdrop-blur-xl">
           <div className="flex min-w-0 items-center gap-1">
             {onScreen && (
               <button onClick={goBack} className="-ml-1 rounded-full p-1.5 text-ink-soft" aria-label="Back">
@@ -339,11 +339,11 @@ export function JourneyShell({ children }: { children: ReactNode }) {
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 {onScreen ? (
-                  <span className="truncate font-display text-[16.5px] font-semibold tracking-tight">{screen ? VIEW_LABEL[screen.view] : ""}</span>
+                  <span className="truncate font-display text-[21px] font-semibold tracking-tight">{screen ? VIEW_LABEL[screen.view] : ""}</span>
                 ) : (
                   <>
                     <Logo className="w-28" />
-                    <span className="border-l border-line pl-1.5 font-display text-[15px] font-semibold tracking-tight">Property Advisor</span>
+                    <span className="border-l border-gold/30 pl-2 font-display text-[18px] font-semibold italic tracking-tight text-gold">Property Advisor</span>
                   </>
                 )}
               </div>
@@ -352,7 +352,7 @@ export function JourneyShell({ children }: { children: ReactNode }) {
           <div className="flex shrink-0 items-center gap-1.5">
             <button
               onClick={humanRequest}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/45 bg-white/20 text-white backdrop-blur-md"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-gold/50 bg-gold/15 text-gold backdrop-blur-md"
               aria-label="Talk to a human advisor"
               title="Talk to a human advisor"
             >
@@ -403,9 +403,9 @@ export function JourneyShell({ children }: { children: ReactNode }) {
       {/* With the avatar off, the strip is where the advisor's written answers show, so it stays on every screen. */}
       {onScreen && (!hideDock || dismissed) && (
         <>
-          <button onClick={toAdvisor} className="shrink-0 border-t border-line bg-card px-4 py-2.5 text-left" aria-label="Back to the advisor">
-            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-verd">
-              <span className={`h-1.5 w-1.5 rounded-full bg-verd ${busy ? "animate-pulse" : ""}`} />
+          <button onClick={toAdvisor} className="shrink-0 border-t border-gold/20 bg-card px-4 py-3 text-left" aria-label="Back to the advisor">
+            <div className="flex items-center gap-2 text-[10.5px] font-semibold uppercase tracking-[0.2em] text-gold">
+              <span className={`h-1.5 w-1.5 rounded-full bg-gold${busy ? "animate-pulse" : ""}`} />
               {busy ? (running?.kind === "tool" ? `${running.tool.name.replace("_", " ")}…` : "Property Advisor is thinking…") : "Property Advisor"}
               <span className="ml-auto font-medium normal-case tracking-normal text-ink-soft">{mode === "avatar" && !dismissed ? "Open Property Advisor" : "Open chat"}</span>
             </div>

@@ -9,11 +9,11 @@
   --ink: #f4f7fb;
   --ink-soft: #9fb0c4;
   --paper: #07131f;
-  --card: #0d2237;
-  --line: #1f3a55;
-  --verd: #3b82c4;
-  --verd-soft: #11304e;
-  --gold: #BDA588;
+  --card: #0b1d2f;
+  --line: #1c3350;
+  --verd: #6aa6dc;
+  --verd-soft: #112f4d;
+  --gold: #c9b08e;
   --gold-soft: #2b2519;
   --site: #050e17;
   --site-ink: #f4f7fb;
@@ -38,7 +38,7 @@
   --color-site: var(--site);
   --color-site-ink: var(--site-ink);
   --color-danger: var(--danger);
-  --font-display: var(--font-inter), ui-sans-serif, system-ui;
+  --font-display: var(--font-cormorant), "Times New Roman", serif;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui;
 }
 
@@ -53,8 +53,34 @@ body {
  * gold button picks it up. (Tinted variants such as bg-gold/90 stay flat.)
  */
 .bg-gold {
-  background-image: linear-gradient(135deg, #e6d7bf 0%, #d3bd9d 32%, #BDA588 55%, #8e7552 100%);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35);
+  background-image: linear-gradient(135deg, #f1e4cc 0%, #dcc6a3 30%, #c4a97f 58%, #8a6f4b 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.5),
+    inset 0 -1px 0 rgb(0 0 0 / 0.15),
+    0 8px 24px -8px rgb(201 176 142 / 0.45);
+}
+
+/* Premium surfaces: soft glass cards with a hairline highlight. */
+.rounded-2xl.border.bg-card {
+  background-image: linear-gradient(160deg, rgb(255 255 255 / 0.05) 0%, rgb(255 255 255 / 0) 55%);
+  border-color: rgb(201 176 142 / 0.16);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 18px 40px -22px rgb(0 0 0 / 0.7);
+}
+
+::selection {
+  background: rgb(201 176 142 / 0.35);
+}
+
+/* Fine grain over the app frame for a printed, tactile finish. */
+.app-shell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 body {
@@ -117,8 +143,10 @@ body {
     height: min(926px, calc(100dvh - 48px));
     border-radius: 36px;
     box-shadow:
+      0 0 0 1px rgb(201 176 142 / 0.35),
       0 0 0 10px #0a1a28,
-      0 30px 80px rgb(0 0 0 / 0.45);
+      0 0 0 11px rgb(201 176 142 / 0.18),
+      0 40px 100px rgb(0 0 0 / 0.6);
   }
 
   .app-shell--wide {

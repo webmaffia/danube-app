@@ -55,14 +55,14 @@ export function Transcript({ turns, busy, error, showPills, onRetry }: { turns: 
       {turns.map((t, i) => {
         if (t.kind === "user")
           return (
-            <div key={i} className="ml-auto max-w-[82%] rounded-2xl rounded-br-md bg-gradient-to-br from-[#3b82c4] to-[#1f5a96] px-3.5 py-2.5 text-[15px] leading-snug text-white">
+            <div key={i} className="ml-auto max-w-[82%] rounded-2xl rounded-br-md bg-linear-to-br from-[#e6d7bf] via-[#c9b08e] to-[#9a7f58] px-4 py-2.5 text-[15px] font-medium leading-snug text-site shadow-[0_8px_20px_-10px_rgba(201,176,142,0.6)]">
               {t.text}
-              {t.interrupted && <span className="mt-1 block text-[11px] text-white/65">Interrupted</span>}
+              {t.interrupted && <span className="mt-1 block text-[11px] text-site/60">Interrupted</span>}
             </div>
           );
         if (t.kind === "agent")
           return (
-            <div key={i} className="mr-auto max-w-[88%] rounded-2xl rounded-bl-md border border-line bg-card px-3.5 py-2.5 text-[15px] leading-snug text-ink">
+            <div key={i} className="mr-auto max-w-[88%] rounded-2xl rounded-bl-md border border-gold/15 bg-card px-4 py-3 text-[15px] leading-relaxed text-ink shadow-[0_10px_24px_-16px_rgb(0_0_0/0.8)]">
               <AgentText text={t.text} />
             </div>
           );

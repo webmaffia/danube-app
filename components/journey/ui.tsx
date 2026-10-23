@@ -7,8 +7,8 @@ export function ScreenTitle({ eyebrow, title, sub, right }: { eyebrow?: string; 
   return (
     <div className="flex items-start justify-between gap-3 px-4 pt-4">
       <div className="min-w-0">
-        {eyebrow && <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gold">{eyebrow}</p>}
-        <h1 className="mt-0.5 font-display text-[24px] font-semibold leading-tight tracking-tight">{title}</h1>
+        {eyebrow && <p className="text-[10.5px] font-semibold uppercase tracking-[0.24em] text-gold">{eyebrow}</p>}
+        <h1 className="mt-1 font-display text-[30px] font-medium leading-[1.05] tracking-tight">{title}</h1>
         {sub && <p className="mt-1 text-[13.5px] leading-snug text-ink-soft">{sub}</p>}
       </div>
       {right}
@@ -19,7 +19,12 @@ export function ScreenTitle({ eyebrow, title, sub, right }: { eyebrow?: string; 
 export function Section({ title, children, className = "" }: { title?: string; children: ReactNode; className?: string }) {
   return (
     <section className={`px-4 pt-5 ${className}`}>
-      {title && <h2 className="mb-2 text-[12px] font-semibold uppercase tracking-[0.12em] text-ink-soft">{title}</h2>}
+      {title && (
+        <h2 className="mb-3 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
+          {title}
+          <span className="h-px flex-1 bg-linear-to-r from-gold/30 to-transparent" />
+        </h2>
+      )}
       {children}
     </section>
   );
@@ -33,7 +38,7 @@ export function Stat({ label, value, hint }: { label: string; value: ReactNode; 
   return (
     <div className="min-w-0">
       <div className="text-[11px] font-medium uppercase tracking-wider text-ink-soft">{label}</div>
-      <div className="mt-0.5 truncate font-display text-[17px] font-semibold tracking-tight">{value}</div>
+      <div className="mt-0.5 truncate font-display text-[21px] font-semibold tracking-tight">{value}</div>
       {hint && <div className="text-[11px] text-ink-soft">{hint}</div>}
     </div>
   );
@@ -71,11 +76,11 @@ export function Button({
 }) {
   const styles = {
     primary: "bg-gold text-site",
-    secondary: "border border-white/35 bg-white/15 text-white backdrop-blur-md active:bg-white/25",
+    secondary: "border border-gold/40 bg-white/5 text-white backdrop-blur-md hover:bg-white/10 active:bg-white/15",
     gold: "bg-gold text-site",
   }[variant];
-  const sizing = size === "sm" ? "h-9 rounded-lg px-3 text-[12.5px]" : "h-12 rounded-xl px-4 text-[14.5px]";
-  const cls = `flex items-center justify-center gap-2 font-semibold transition active:scale-[0.99] disabled:opacity-40 ${sizing} ${styles} ${className}`;
+  const sizing = size === "sm" ? "h-9 rounded-full px-4 text-[12px] tracking-[0.04em]" : "h-[52px] rounded-full px-6 text-[13px] uppercase tracking-[0.14em]";
+  const cls = `flex items-center justify-center gap-2 font-semibold transition duration-300 hover:brightness-110 active:scale-[0.98] disabled:opacity-40 ${sizing} ${styles} ${className}`;
   if (href) {
     return (
       <Link href={href} className={cls}>
@@ -96,7 +101,7 @@ export function Button({
  * sits at the bottom when the content is short.
  */
 export function StickyBar({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={`sticky bottom-0 z-10 mt-auto flex shrink-0 flex-col gap-2 bg-paper/85 px-4 pb-3 pt-4 backdrop-blur ${className}`}>{children}</div>;
+  return <div className={`sticky bottom-0 z-10 mt-auto flex shrink-0 flex-col gap-2 border-t border-gold/10 bg-paper/80 px-4 pb-3 pt-4 backdrop-blur-xl ${className}`}>{children}</div>;
 }
 
 export function Badge({ children, tone = "verd" }: { children: ReactNode; tone?: "verd" | "gold" | "muted" }) {
@@ -113,7 +118,7 @@ export function Steps({ current, total }: { current: number; total: number }) {
   return (
     <div className="flex gap-1.5 px-4 pt-3" aria-label={`Step ${current} of ${total}`}>
       {Array.from({ length: total }, (_, i) => (
-        <span key={i} className={`h-1 flex-1 rounded-full ${i < current ? "bg-verd" : "bg-line"}`} />
+        <span key={i} className={`h-1 flex-1 rounded-full ${i < current ? "bg-gold" : "bg-line"}`} />
       ))}
     </div>
   );
@@ -130,4 +135,4 @@ export function Field({ label, children, hint, error }: { label: string; childre
 }
 
 export const inputClass =
-  "h-12 w-full rounded-xl border border-line bg-card px-3.5 text-[15px] text-ink outline-none placeholder:text-ink-soft/60 focus:border-verd";
+  "h-12 w-full rounded-xl border border-line bg-card px-3.5 text-[15px] text-ink outline-none transition placeholder:text-ink-soft/60 focus:border-gold focus:shadow-[0_0_0_3px_rgb(201_176_142/0.15)]";

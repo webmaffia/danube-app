@@ -50,9 +50,9 @@ function CalculatorFor({ unit }: { unit: Unit }) {
       />
 
       <Card className="mx-4 mt-4 overflow-hidden">
-        <div className="bg-site px-4 py-4 text-site-ink">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-site-ink/70">Monthly instalment</div>
-          <div className="mt-0.5 font-display text-[34px] font-semibold leading-none tracking-tight">{aed(r.monthly_instalment)}</div>
+        <div className="bg-linear-to-br from-[#143a5c] to-site px-5 py-5 text-site-ink">
+          <div className="text-[10.5px] font-semibold uppercase tracking-[0.24em] text-gold">Monthly instalment</div>
+          <div className="mt-1.5 font-display text-[46px] font-medium leading-none tracking-tight">{aed(r.monthly_instalment)}</div>
           <div className="mt-1.5 text-[12px] text-site-ink/70">
             {r.monthly_pct_of_price}% of the price a month for {r.months} months · 0% interest
           </div>
@@ -122,7 +122,7 @@ function Out({ label, value }: { label: string; value: string }) {
   return (
     <div className="px-3 py-2.5">
       <div className="text-[10.5px] font-medium uppercase tracking-wider text-ink-soft">{label}</div>
-      <div className="text-[14.5px] font-semibold">{value}</div>
+      <div className="font-display text-[19px] font-semibold">{value}</div>
     </div>
   );
 }
@@ -132,9 +132,9 @@ function Slider({ label, display, min, max, step, value, onChange }: { label: st
     <label className="block">
       <div className="flex items-baseline justify-between">
         <span className="text-[13px] font-medium text-ink-soft">{label}</span>
-        <span className="text-[14px] font-semibold">{display}</span>
+        <span className="font-display text-[19px] font-semibold text-gold">{display}</span>
       </div>
-      <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} className="mt-1.5 w-full accent-[var(--verd)]" />
+      <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} className="mt-2 w-full accent-[var(--gold)]" />
     </label>
   );
 }

@@ -10,13 +10,14 @@ import { useRouter } from "next/navigation";
 import { nextPlanStep, PLAN_STEPS, useSession, type PlanStep } from "@/lib/store";
 import { dateIn, aed, scheduleSteps } from "@/lib/journey";
 import { getProject } from "@/lib/inventory";
+import { avatar } from "@/lib/avatar/controller";
 import { Button, Card, Disclosure, SandboxTag, ScreenTitle, Section, StickyBar } from "@/components/journey/ui";
 
 const STAGES = ["Connecting to your bank…", "Authorising payment…", "Confirming with the developer…", "Payment received"];
 
 export default function PlanPage() {
   const router = useRouter();
-  const { booking, kyc, plan, completePlanStep, sendEvent } = useSession();
+  const { booking, kyc, plan, completePlanStep, sendEvent, requestHuman } = useSession();
   const [stage, setStage] = useState<number | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
@@ -94,7 +95,7 @@ export default function PlanPage() {
             <span className="absolute bottom-4 left-[5px] top-4 w-px bg-line" />
             {rows.map((s) => (
               <li key={s.title} className="relative flex gap-3 py-2.5">
-                <span className={`relative mt-1 h-[11px] w-[11px] shrink-0 rounded-full border-2 ${s.done ? "border-verd bg-verd" : "border-verd bg-card"}`} />
+                <span className={`relative mt-1 h-[11px] w-[11px] shrink-0 rounded-full border-2 ${s.done ? "border-gold bg-gold" : "border-gold/60 bg-card"}`} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline justify-between gap-2">
                     <span className="text-[13.5px] font-semibold">{s.title}</span>
@@ -114,7 +115,7 @@ export default function PlanPage() {
         {paying ? (
           <Card className="px-4 py-4">
             <div className="h-1.5 overflow-hidden rounded-full bg-line">
-              <div className="h-full rounded-full bg-verd transition-[width] duration-1000 ease-linear" style={{ width: `${((stage + 1) / STAGES.length) * 100}%` }} />
+              <div className="h-full rounded-full bg-gold transition-[width] duration-1000 ease-linear" style={{ width: `${((stage + 1) / STAGES.length) * 100}%` }} />
             </div>
             <p className="mt-3 text-[14px] font-semibold">{STAGES[stage]}</p>
             <p className="text-[12px] text-ink-soft">Sandbox payment. No money moves.</p>
@@ -142,10 +143,30 @@ export default function PlanPage() {
             Pay {aed(META[current].amount ?? 0)} · sandbox
           </Button>
         ) : (
-          <Card className="px-4 py-4 text-center">
-            <p className="font-display text-[19px] font-semibold">Unit {booking.unit_no} is yours</p>
-            <p className="mt-1 text-[12.5px] text-ink-soft">Every step is done. This is the end of the booking journey.</p>
-          </Card>
+          <>
+            <Card className="px-4 py-3 text-center">
+              <p className="font-display text-[26px] font-medium leading-tight text-gold">Unit {booking.unit_no} is yours</p>
+              <p className="mt-1 text-[12.5px] leading-snug text-ink-soft">
+                Every step is done. From here you pay 1% a month until handover, and Danube sends your documents.
+              </p>
+            </Card>
+            <Button onClick={() => router.push("/booking")}>View my booking summary</Button>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  avatar.bargeIn();
+                  void requestHuman();
+                }}
+              >
+                Talk to an advisor
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => router.push("/units")}>
+                Other projects
+              </Button>
+            </div>
+          </>
         )}
       </StickyBar>
     </div>

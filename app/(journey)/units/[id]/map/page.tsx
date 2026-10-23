@@ -77,7 +77,7 @@ export default function UnitMap() {
             key={s ?? "all"}
             onClick={() => setSize(s)}
             className={`shrink-0 rounded-full border px-3 py-1.5 text-[12.5px] font-semibold ${
-              size === s ? "border-verd bg-verd text-white" : "border-line bg-card text-ink"
+              size === s ? "border-gold bg-gold text-site" : "border-line bg-card text-ink"
             }`}
           >
             {s == null ? "All layouts" : `${project.layoutNames?.[s] ?? bedroomLabel(project.bedrooms[s])} · ${sqft(s)}`}
@@ -96,14 +96,14 @@ export default function UnitMap() {
           step={50000}
           value={cap}
           onChange={(e) => setMaxPrice(Number(e.target.value))}
-          className="mt-1 w-full accent-[var(--verd)]"
+          className="mt-1 w-full accent-[var(--gold)]"
           aria-label="Maximum price"
         />
       </div>
 
       {/* the building */}
       <div className="mx-4 mt-3 rounded-2xl border border-line bg-[repeating-linear-gradient(0deg,transparent,transparent_23px,var(--line)_24px)] p-3">
-        <div className="mb-2 flex h-7 items-center justify-center rounded-lg bg-verd-soft text-[11px] font-semibold uppercase tracking-wider text-verd">
+        <div className="mb-2 flex h-7 items-center justify-center rounded-lg border border-gold/25 bg-gold-soft text-[10.5px] font-semibold uppercase tracking-[0.22em] text-gold">
           {project.community ? "Community entrance" : "Rooftop"}
         </div>
         <div className="flex flex-col gap-1.5">
@@ -140,7 +140,7 @@ export default function UnitMap() {
           ))}
         </div>
         <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-ink-soft">
-          <Legend className="border-verd bg-card" label="Available" />
+          <Legend className="border-verd/70 bg-card" label="Available" />
           <Legend className="border-gold bg-gold-soft" label="Held" />
           <Legend className="border-line bg-[repeating-linear-gradient(45deg,var(--line),var(--line)_3px,transparent_3px,transparent_6px)]" label="Sold" />
         </div>
@@ -150,7 +150,7 @@ export default function UnitMap() {
         // Fixed inside the phone frame (the shell is the containing block), so it sits over the dock and composer.
         <div className="fixed inset-0 z-[60] flex items-center" role="dialog" aria-label={`Unit ${selected.unitNo}`}>
           <button className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" onClick={() => setOpenFor(null)} aria-label="Close" />
-          <Card className="relative mx-4 w-full px-4 py-3.5 shadow-2xl">
+          <Card className="relative mx-4 w-full rounded-3xl border-gold/30 px-5 py-5 shadow-2xl">
             <button
               onClick={() => setOpenFor(null)}
               aria-label="Close"
@@ -162,7 +162,7 @@ export default function UnitMap() {
             </button>
             <div className="flex items-start justify-between gap-2 pr-0">
               <div>
-                <div className="font-display text-[22px] font-semibold tracking-tight">{selected.unitNo}</div>
+                <div className="font-display text-[32px] font-medium leading-none tracking-tight">{selected.unitNo}</div>
                 <div className="mt-0.5 flex flex-wrap gap-1.5">
                   <Badge tone={selected.status === "available" ? "verd" : selected.status === "held" ? "gold" : "muted"}>
                     {booking?.unit_id === selected.id ? "Held for you" : selected.status[0].toUpperCase() + selected.status.slice(1)}
@@ -172,7 +172,7 @@ export default function UnitMap() {
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-display text-[20px] font-semibold">{aedShort(selected.price)}</div>
+                <div className="font-display text-[26px] font-medium text-gold">{aedShort(selected.price)}</div>
                 <div className="text-[11.5px] text-ink-soft">excl. government fees</div>
               </div>
             </div>
@@ -223,7 +223,7 @@ function UnitCell({ unit, dim, selected, mine, onClick }: { unit: Unit; dim: boo
       ? "border-line text-ink-soft bg-[repeating-linear-gradient(45deg,var(--line),var(--line)_3px,transparent_3px,transparent_7px)]"
       : unit.status === "held"
         ? "border-gold bg-gold-soft text-ink"
-        : "border-verd/60 bg-card text-ink";
+        : "border-verd/50 bg-card text-ink";
   return (
     <button
       onClick={onClick}
