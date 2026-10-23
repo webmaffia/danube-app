@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "@/lib/store";
 import { avatar } from "@/lib/avatar/controller";
-import { projectReturnLine } from "@/lib/avatar/screen-lines";
+import { projectBriefing, projectReturnLine } from "@/lib/avatar/screen-lines";
 import { STATUS_LABEL, availabilityLabel, entryTicket, getUnits, getProject, PROJECTS } from "@/lib/inventory";
 import { lookupKnowledge } from "@/lib/knowledge";
 import { aedShort } from "@/lib/journey";
@@ -13,8 +13,9 @@ import { SITE_MAPS, flushScroll } from "@/lib/maps";
 import { Badge, Button, Card, Disclosure, Section, Stat } from "@/components/journey/ui";
 import { Skyline, UnitGrid } from "@/components/Skyline";
 import { FilmStrip } from "@/components/journey/FilmStrip";
-import { Gallery } from "@/components/journey/Gallery";
+import { AmenityShowcase, Gallery } from "@/components/journey/Gallery";
 import { PlaceIcon } from "@/components/journey/PlaceIcon";
+import { PLACE_ICONS } from "@/lib/place-icons";
 import { PinIcon } from "@/components/icons";
 
 function Check({ className = "" }: { className?: string }) {
@@ -68,6 +69,7 @@ export default function ProjectDetail() {
           poster={project.image ?? films[0].poster}
           startDone={introSeen.includes(project.id)}
           returnLine={projectReturnLine(project.name, available, units.length, entryTicket(project), profile.name?.split(" ")[0] ?? null)}
+          briefing={projectBriefing(project.id, available, units.length, entryTicket(project), false) ?? undefined}
           onFinished={() => markIntroSeen(project.id)}
         />
       ) : (
@@ -196,19 +198,30 @@ export default function ProjectDetail() {
       )}
 
       <Section id="travel" title="Getting around">
-        <div className="rounded-xl bg-[#3a3f4b] px-3 py-6">
-          <p className="mb-5 text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-[#9a9fa9]">Travel time from {project.name}</p>
-          <ul className="grid grid-cols-3 gap-x-2 gap-y-7">
-            {ladder.map((c) => (
-              <li key={c.label} className="flex flex-col items-center text-center">
-                <PlaceIcon label={c.label} className="h-10 w-10 text-gold" />
-                <div className="mt-3 font-display text-[13px] font-semibold leading-snug text-[#e0cfb0]">{c.label}</div>
-                <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#a8adb7]">{c.minutes} min</div>
-                {c.note && <div className="mt-0.5 text-[10px] leading-tight text-[#8f949e]">{c.note}</div>}
+        <p className="-mt-1 mb-4 text-center text-[12.5px] text-ink-soft">Travel time from {project.name}</p>
+        <ul className="grid grid-cols-3 overflow-hidden rounded-xl border border-line bg-card">
+          {ladder.map((c, i) => {
+            const icon = PLACE_ICONS[project.id]?.[c.label];
+            const rows = Math.ceil(ladder.length / 3);
+            const lastRow = Math.floor(i / 3) === rows - 1;
+            return (
+              <li
+                key={c.label}
+                className={`flex flex-col items-center px-2 py-5 text-center ${i % 3 !== 2 ? "border-r border-line" : ""} ${lastRow ? "" : "border-b border-line"}`}
+              >
+                {icon ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={icon} alt="" width={40} height={40} className="h-10 w-10 object-contain" />
+                ) : (
+                  <PlaceIcon label={c.label} className="h-10 w-10 text-gold" />
+                )}
+                <div className="mt-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-soft">{c.minutes} {c.minutes === 1 ? "min" : "mins"}</div>
+                <div className="mt-0.5 text-[11px] font-medium uppercase leading-snug tracking-[0.1em] text-muted">{c.label}</div>
+                {c.note && <div className="mt-1 text-[10px] leading-tight text-muted">{c.note}</div>}
               </li>
-            ))}
-          </ul>
-        </div>
+            );
+          })}
+        </ul>
       </Section>
 
       {SITE_MAPS[project.id] && (
@@ -248,6 +261,8 @@ export default function ProjectDetail() {
           ))}
         </ul>
       </Section>
+
+      <AmenityShowcase projectId={project.id} projectName={project.name} />
 
       {amenities.length > 0 && (
         <Section title="Amenities">

@@ -24,8 +24,8 @@ import { FramePortal } from "@/components/journey/FramePortal";
 const TAIL_MS = 800; // footage after the narration ends, if the film is still running
 const GAP_MS = 250; // pause between films when the film has already ended
 
-const guideLine = (projectName: string, skipped: boolean) =>
-  `${skipped ? "No problem, we can skip the tour." : `That's ${projectName}.`} Quick question: are you looking at this as an investment, or as a getaway you'd enjoy yourself? Just tell me.`;
+const guideLine = (projectName: string, skipped: boolean, briefing?: string) =>
+  `${skipped ? "No problem, we can skip the tour." : `That's ${projectName}.`}${briefing ? ` ${briefing}` : ""} Quick question: are you looking at this as an investment, or as a getaway you'd enjoy yourself? Just tell me.`;
 
 export function FilmStrip({
   projectName,
@@ -34,6 +34,7 @@ export function FilmStrip({
   onFinished,
   startDone = false,
   returnLine,
+  briefing,
 }: {
   projectName: string;
   videos: ProjectVideo[];
@@ -44,6 +45,8 @@ export function FilmStrip({
   startDone?: boolean;
   /** Said when the page opens on the hero because the tour was already seen. */
   returnLine?: string;
+  /** The project's details, spoken after the tour and before the first question. */
+  briefing?: string;
 }) {
   const [index, setIndex] = useState(0);
   const [done, setDone] = useState(startDone);
@@ -72,9 +75,9 @@ export function FilmStrip({
       clearTimeout(advance.current);
       setDone(true);
       onFinished();
-      speakSoon(guideLine(projectName, skipped));
+      speakSoon(guideLine(projectName, skipped, briefing));
     },
-    [onFinished, projectName, speakSoon],
+    [onFinished, projectName, briefing, speakSoon],
   );
 
   const next = useCallback(() => {

@@ -3,7 +3,7 @@
 // app data, so every figure is exact. When the advisor itself opened the
 // screen (a `show` call), its own reply covers it and none of this is said.
 
-import { findUnit, getProject, type Unit, type UnitOverrides } from "@/lib/inventory";
+import { entryTicket, findUnit, getProject, getUnits, type Unit, type UnitOverrides } from "@/lib/inventory";
 import { aedShort } from "@/lib/journey";
 import { TOKEN_AMOUNT } from "@/lib/knowledge";
 
@@ -43,9 +43,12 @@ export function screenCue(path: string, s: CueState): ScreenCue {
     }
     // The project page narrates its own films; a page without films gets a line.
     if (project.videos?.length) return { interrupt: false, line: null };
+    const units = getUnits(project.id);
+    const available = units.filter((u) => u.status === "available").length;
+    const briefing = projectBriefing(project.id, available, units.length, entryTicket(project));
     return {
       interrupt: true,
-      line: `Here's ${project.name}. Take a look at the details, and I'll take you to the units whenever you're ready.`,
+      line: `Here's ${project.name}. ${briefing ?? "Take a look at the details, and I'll take you to the units whenever you're ready."}`,
     };
   }
 
@@ -93,6 +96,39 @@ export function screenCue(path: string, s: CueState): ScreenCue {
   }
 
   return { interrupt: true, line: null };
+}
+
+/**
+ * A spoken walk through one project, built only from app data: where it is, what
+ * it costs, when it's ready, how far things are and what's in it. It ends with a
+ * question so the customer is drawn into the conversation, not just talked at.
+ */
+export function projectBriefing(projectId: string, available: number, total: number, entryAmount: number, withQuestion = true): string | null {
+  const project = getProject(projectId);
+  if (!project) return null;
+  const soldOut = project.availability === "sold_out";
+  const parts: string[] = [`It's in ${project.location}.`];
+  if (project.hook) parts.push(/[.!?]$/.test(project.hook) ? project.hook : `${project.hook}.`);
+  if (entryAmount > 0) parts.push(`${soldOut ? "It was from" : "It starts from"} ${aedShort(entryAmount)}, with handover in ${project.handover}.`);
+  else parts.push(`Handover is ${project.handover}.`);
+  if (!soldOut) {
+    parts.push(
+      project.plan.confirmed
+        ? `You can pay over time: about ${project.plan.downPct}% down, then 1% a month while it's built, and the rest on handover.`
+        : "You can pay over time with Danube's 1% monthly plan, though the exact terms for this project are indicative, so we'd confirm them with the sales team.",
+    );
+  }
+  const near = [...project.connectivity].sort((a, b) => a.minutes - b.minutes).slice(0, 2);
+  if (near.length) parts.push(`${near.map((c) => `${c.label} is ${c.minutes} minutes away`).join(", and ")}.`);
+  const highlights = project.features.slice(0, 3);
+  if (highlights.length) parts.push(`Highlights include ${highlights.slice(0, -1).join(", ")}${highlights.length > 1 ? " and " : ""}${highlights[highlights.length - 1]}.`);
+  if (soldOut) {
+    parts.push("It's sold out now" + (withQuestion ? ", but I can show you a similar project that still has units. Would you like that?" : "."));
+  } else {
+    parts.push(available <= 5 ? `Only ${available} of ${total} units are left.` : `${available} of ${total} units are still available.`);
+    if (withQuestion) parts.push("What matters most to you here: the location, the amenities, or the payment plan? Tell me, and I'll go into detail.");
+  }
+  return parts.join(" ");
 }
 
 /**
