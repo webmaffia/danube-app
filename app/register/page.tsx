@@ -5,8 +5,8 @@
 // so the advisor is ready by the time they land on it.
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useAppRouter as useRouter } from "@/lib/nav";
+import { AppLink as Link } from "@/lib/nav";
 import { useSession } from "@/lib/store";
 import { avatar } from "@/lib/avatar/controller";
 import { ArrowIcon, BackIcon } from "@/components/icons";
@@ -123,7 +123,7 @@ export default function Register() {
             </select>
           </label>
 
-          <Button type="submit" disabled={!detailsOk} className="mt-auto">
+          <Button type="submit" disabled={!detailsOk} className="mt-auto desk:mt-10">
             Send code
             <ArrowIcon className="h-5 w-5" />
           </Button>
@@ -175,7 +175,7 @@ export default function Register() {
             Your advisor is getting ready while you verify.
           </p>
 
-          <Button type="submit" disabled={code !== OTP} className="mt-auto">
+          <Button type="submit" disabled={code !== OTP} className="mt-auto desk:mt-10">
             Verify and meet your advisor
             <ArrowIcon className="h-5 w-5" />
           </Button>

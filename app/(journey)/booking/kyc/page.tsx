@@ -5,7 +5,7 @@
 // Only a masked document number is kept in the session.
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useAppRouter as useRouter } from "@/lib/nav";
 import { useSession } from "@/lib/store";
 import { yearsSince } from "@/lib/journey";
 import { Button, Card, Field, SandboxTag, ScreenTitle, Steps, StickyBar, inputClass } from "@/components/journey/ui";
@@ -69,7 +69,7 @@ export default function Kyc() {
   // KYC follows the token payment: send the customer back to pay first.
   if (booking?.status !== "paid" && !kyc) {
     return (
-      <div className="flex min-h-full flex-col">
+      <div className="d-narrow flex min-h-full flex-col">
         <ScreenTitle eyebrow="Verify your identity" title="Pay the token first" sub="KYC opens once your token payment is done." />
         <StickyBar>
           <Button onClick={() => router.push("/booking")}>Go to booking</Button>
@@ -79,13 +79,13 @@ export default function Kyc() {
   }
 
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="d-narrow flex min-h-full flex-col">
       <ScreenTitle eyebrow="Verify your identity" title={step === "done" ? "KYC complete" : "Quick KYC"} sub="Takes about two minutes." right={<SandboxTag />} />
       <Steps current={idx + 1} total={ORDER.length} />
 
       {step === "id" && (
         <form
-          className="mt-5 flex flex-1 flex-col gap-4 px-4"
+          className="mt-5 flex flex-1 flex-col gap-4 px-4 desk:px-0"
           onSubmit={(e) => {
             e.preventDefault();
             if (docOk && dobOk && name.trim().length > 1) setStep("consent");
@@ -128,7 +128,7 @@ export default function Kyc() {
           <Field label="Date of birth" error={dob && !dobOk ? "You need to be 18 or older." : null}>
             <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className={inputClass} />
           </Field>
-          <StickyBar className="-mx-4">
+          <StickyBar className="-mx-4 desk:mx-0">
             <Button type="submit" disabled={!docOk || !dobOk || name.trim().length < 2}>
               Continue
             </Button>
@@ -137,7 +137,7 @@ export default function Kyc() {
       )}
 
       {step === "consent" && (
-        <div className="mt-5 flex flex-1 flex-col px-4">
+        <div className="mt-5 flex flex-1 flex-col px-4 desk:px-0">
           <Card className="px-4 py-4">
             <div className="font-display text-[24px] font-semibold tracking-tight">Verify with UAE PASS</div>
             <p className="mt-1.5 text-[13px] leading-relaxed text-ink-soft">
@@ -148,7 +148,7 @@ export default function Kyc() {
               I consent to Danube verifying my identity details through UAE PASS for this booking.
             </label>
           </Card>
-          <StickyBar className="-mx-4">
+          <StickyBar className="-mx-4 desk:mx-0">
             <Button
               disabled={!consent || fetching}
               onClick={() => {
@@ -167,7 +167,7 @@ export default function Kyc() {
 
       {step === "address" && (
         <form
-          className="mt-5 flex flex-1 flex-col gap-4 px-4"
+          className="mt-5 flex flex-1 flex-col gap-4 px-4 desk:px-0"
           onSubmit={(e) => {
             e.preventDefault();
             if (line.trim().length > 4 && country.trim().length > 1) setStep("liveness");
@@ -185,7 +185,7 @@ export default function Kyc() {
               <input value={country} onChange={(e) => setCountry(e.target.value)} className={inputClass} autoComplete="country-name" />
             </Field>
           </div>
-          <StickyBar className="-mx-4">
+          <StickyBar className="-mx-4 desk:mx-0">
             <Button type="submit" disabled={line.trim().length < 5 || country.trim().length < 2}>
               Continue to selfie check
             </Button>
@@ -194,7 +194,7 @@ export default function Kyc() {
       )}
 
       {step === "liveness" && (
-        <div className="mt-6 flex flex-col items-center px-4 text-center">
+        <div className="mt-6 flex flex-col items-center px-4 desk:px-0 text-center">
           <div className="relative flex h-52 w-44 items-center justify-center overflow-hidden rounded-[48%] border-[3px] border-gold bg-site shadow-[0_0_50px_-10px_rgba(201,176,142,0.5)]">
             <svg viewBox="0 0 100 120" className="h-40 text-site-ink/50" aria-hidden="true">
               <ellipse cx="50" cy="52" rx="28" ry="34" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" />
@@ -208,7 +208,7 @@ export default function Kyc() {
       )}
 
       {step === "done" && (
-        <div className="mt-5 flex flex-1 flex-col px-4">
+        <div className="mt-5 flex flex-1 flex-col px-4 desk:px-0">
           <Card className="divide-y divide-line">
             {[
               [DOC_LABEL[docType], kyc?.idMasked ?? "Verified"],
@@ -227,7 +227,7 @@ export default function Kyc() {
             ))}
           </Card>
           <p className="mt-3 text-center text-[11.5px] text-ink-soft">Sandbox verdict. No identity documents were checked.</p>
-          <StickyBar className="-mx-4">
+          <StickyBar className="-mx-4 desk:mx-0">
             <Button onClick={() => router.push("/booking/plan")}>Continue to payment schedule</Button>
           </StickyBar>
         </div>

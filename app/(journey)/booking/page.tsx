@@ -5,7 +5,7 @@
 // The agent creates the booking; only the customer confirms payment here.
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useAppRouter as useRouter } from "@/lib/nav";
 import { nextPlanStep, useSession, type Booking, type PlanProgress } from "@/lib/store";
 import { findUnit, getProject } from "@/lib/inventory";
 import { avatar, useAvatar } from "@/lib/avatar/controller";
@@ -83,10 +83,11 @@ export default function BookingPage() {
   const paying = stage !== null;
 
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="d-split flex min-h-full flex-col desk:pt-2">
+      <div className="d-aside">
       <ScreenTitle eyebrow="Booking" title="Confirm your unit" right={<SandboxTag />} />
 
-      <Card className="mx-4 mt-4 px-4 py-3.5">
+      <Card className="mx-4 mt-4 px-4 py-3.5 desk:mx-0 desk:mt-8">
         <div className="flex items-start justify-between">
           <div>
             <div className="font-display text-[32px] font-medium leading-none tracking-tight">{booking.unit_no}</div>
@@ -107,6 +108,7 @@ export default function BookingPage() {
           Booking {booking.booking_id}. The token is fully refundable for 15 days. The rest follows Danube's 1% payment plan.
         </p>
       </Card>
+      </div>
 
       <Section title="Pay with">
         <div className="grid gap-2">
@@ -194,8 +196,8 @@ function Confirmation({
   ];
 
   return (
-    <div className="flex min-h-full flex-col">
-      <div className="flex flex-col items-center px-6 pt-6 text-center">
+    <div className="d-split flex min-h-full flex-col">
+      <div className="flex flex-col items-center px-6 pt-6 text-center desk:items-start desk:px-0 desk:pt-12 desk:text-left">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gold text-site ring-8 ring-gold/10">
           <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M5 12.5l4.5 4.5L19 7.5" />
@@ -240,6 +242,7 @@ function Confirmation({
         </Card>
       </Section>
 
+      <div className="d-aside desk:pt-2">
       <Section title="Booking summary">
         <Card className="divide-y divide-line">
           {summary.map(([k, v]) => (
@@ -263,6 +266,8 @@ function Confirmation({
           ))}
         </Card>
       </Section>
+
+      </div>
 
       <Disclosure>Sandbox: these are sample documents. Nothing is issued or registered in this prototype.</Disclosure>
 

@@ -12,9 +12,14 @@
 // - the app screens: the avatar shrinks to a tile in the corner (or, in chat,
 //   the advisor's latest line docks above the input); minimising the advisor
 //   lands here, and tapping the tile or the dock goes back
+//
+// On desktop (/desktop/...) the same shell is a website: a top nav, the screen
+// across the full width, and the advisor as a chat widget pinned bottom right.
+// There is no full-screen advisor, tile or dock.
 
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { isDesktopPath, stripBase, useAppRouter as useRouter } from "@/lib/nav";
 import { nextPlanStep, useSession } from "@/lib/store";
 import { avatar, useAvatar } from "@/lib/avatar/controller";
 import { flushScroll, requestScroll } from "@/lib/maps";
@@ -28,6 +33,8 @@ import { BackIcon, MinimizeIcon, PhoneIcon } from "@/components/icons";
 import { Logo } from "@/components/Logo";
 import { screenCue } from "@/lib/avatar/screen-lines";
 import { FindingOverlay } from "@/components/journey/FindingOverlay";
+import { DesktopWelcome } from "@/components/journey/DesktopWelcome";
+import { AdvisorWidget } from "@/components/desktop/AdvisorWidget";
 
 // Next steps on the property page: the unit map first, then the questions
 // buyers usually ask about a project.
@@ -97,9 +104,20 @@ const DIRECT_ROUTES: Record<string, string> = {
 };
 const noopSubscribe = () => () => {};
 
+// The desktop header's section links.
+const DESKTOP_NAV = [
+  { label: "Projects", href: "/units", match: /^\/units(\/[^/]+)?$/ },
+  { label: "Unit map", href: "/units/bayz102/map", match: /^\/units\/[^/]+\/map$/ },
+  { label: "Payment plan", href: "/money/calculator", match: /^\/money/ },
+  { label: "Booking", href: "/booking", match: /^\/booking/ },
+];
+
 export function JourneyShell({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const pathname = usePathname();
+  const rawPathname = usePathname();
+  const desktop = isDesktopPath(rawPathname);
+  // Everything below works on the root-relative path, so both versions share it.
+  const pathname = stripBase(rawPathname);
   // sessionStorage only exists in the browser, so render after hydration.
   const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false);
   const { turns, busy, error, profile, send, requestHuman, screen, screenSeq, selectedUnit, overrides, onboarding, booking, kyc, plan } = useSession();
@@ -122,7 +140,7 @@ export function JourneyShell({ children }: { children: ReactNode }) {
 
   const onScreen = pathname !== "/agent";
   // A closed avatar leaves the advisor page as plain chat.
-  const immersive = !onScreen && mode === "avatar" && !dismissed;
+  const immersive = !desktop && !onScreen && mode === "avatar" && !dismissed;
 
   // Boot: bind the avatar to the conversation, warm it, greet once.
   useEffect(() => {
@@ -324,6 +342,65 @@ export function JourneyShell({ children }: { children: ReactNode }) {
     if (text === BOOK_UNIT && picked) return void send(`Book unit ${picked.unitNo} for me.`);
     void send(text);
   };
+
+  if (desktop) {
+    return (
+      <main className="relative flex h-full flex-col bg-paper" onPointerDown={() => avatar.wake()}>
+        <header className="flex shrink-0 items-center gap-10 border-b border-white/10 bg-site px-10 py-4 text-site-ink">
+          <button onClick={() => router.push("/units")} aria-label="Danube home">
+            <Logo className="w-40" onDark />
+          </button>
+          <nav className="flex items-center gap-2 text-[14px] font-medium" aria-label="Sections">
+            {DESKTOP_NAV.map((n) => {
+              const active = n.match.test(pathname);
+              return (
+                <button
+                  key={n.href}
+                  onClick={() => router.push(n.href)}
+                  aria-current={active ? "page" : undefined}
+                  className={`rounded-full px-4 py-2 transition ${active ? "bg-white/15 text-white" : "text-white/65 hover:bg-white/10 hover:text-white"}`}
+                >
+                  {n.label}
+                </button>
+              );
+            })}
+          </nav>
+          <div className="ml-auto flex items-center gap-4">
+            <button
+              onClick={humanRequest}
+              className="flex h-10 items-center gap-2 rounded-full border border-white/30 bg-white/10 px-5 text-[13px] font-semibold text-site-ink transition hover:bg-white/20"
+            >
+              <PhoneIcon className="h-4 w-4" />
+              Talk to a human
+            </button>
+            <span
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-gold font-display text-[17px] font-semibold text-site"
+              title={profile.name ?? undefined}
+              aria-label={profile.name ?? "Account"}
+            >
+              {profile.name?.trim()[0]?.toUpperCase()}
+            </span>
+          </div>
+        </header>
+
+        <div ref={content} className="desk-content min-h-0 flex-1 overflow-y-auto">
+          {onScreen ? children : <DesktopWelcome />}
+        </div>
+
+        <AdvisorWidget
+          turns={turns}
+          busy={busy}
+          error={error}
+          chips={chips}
+          autoOpen={Boolean(onboarding)}
+          banner={note && mode === "chat" ? <FallbackNote note={note} liveEnabled={liveEnabled} /> : undefined}
+          onSend={sendFromComposer}
+          onRetry={() => void send(lastUserText(turns))}
+        />
+        <FindingOverlay />
+      </main>
+    );
+  }
 
   return (
     // Any touch counts as activity: reopen a paused avatar before they speak.

@@ -1,6 +1,34 @@
 @import "tailwindcss";
 
 /*
+ * Desktop variants. `desk:` applies on the desktop version of the app (/desktop,
+ * which puts .app-shell--desktop on the frame) once the window is 1024px or
+ * wider; `deskxl:` from 1280px. The phone version never matches, however big
+ * the monitor it is shown on.
+ */
+@custom-variant desk {
+  @media (min-width: 64rem) {
+    &:where(.app-shell--desktop *) {
+      @slot;
+    }
+  }
+}
+@custom-variant deskxxl {
+  @media (min-width: 96rem) {
+    &:where(.app-shell--desktop *) {
+      @slot;
+    }
+  }
+}
+@custom-variant deskxl {
+  @media (min-width: 80rem) {
+    &:where(.app-shell--desktop *) {
+      @slot;
+    }
+  }
+}
+
+/*
  * Danube brand: white and light-grey surfaces, charcoal text, charcoal actions,
  * Sand Gold accents. Token names are historical (verd is now the charcoal accent),
  * so every screen picks the palette up from here.
@@ -132,6 +160,11 @@ body {
   max-width: 1280px;
 }
 
+/* The desktop version (/desktop): the app fills the window, no phone frame. */
+.app-shell--desktop {
+  max-width: none;
+}
+
 @media (min-width: 500px) {
   body {
     display: grid;
@@ -153,6 +186,13 @@ body {
     width: calc(100vw - 48px);
     border-radius: 20px;
     box-shadow: 0 30px 80px rgb(0 0 0 / 0.45);
+  }
+
+  .app-shell--desktop {
+    width: 100%;
+    height: 100dvh;
+    border-radius: 0;
+    box-shadow: none;
   }
 }
 
@@ -203,3 +243,79 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .speaking .svg-mouth, .svg-eye, .svg-body, .pulse-ring, .wave-bar, .slide-zoom, .slide-caption { animation: none; }
 }
+
+/*
+ * Desktop pages: each screen spans the whole window, with side gutters that grow with it.
+ * (Not a container query: that would make this pane the containing block for
+ * the fixed dialogs inside it.)
+ */
+.desk-content {
+  padding-bottom: 120px; /* clear of the advisor widget */
+}
+
+.desk-content > * {
+  width: 100%;
+  padding-inline: clamp(40px, 5vw, 96px);
+}
+
+/* A main column with a sticky aside (project page, unit map, calculator, booking). */
+@media (min-width: 64rem) {
+  .app-shell--desktop .d-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(390px, 28vw, 520px);
+    column-gap: 48px;
+    align-items: start;
+  }
+  .app-shell--desktop .d-split > * {
+    grid-column: 1;
+  }
+  /* Edge-to-edge screens: a full-bleed banner, with .d-wrap re-centring the rest. */
+  .app-shell--desktop .desk-content > .d-full {
+    max-width: none;
+    padding-inline: 0;
+  }
+  .app-shell--desktop .d-wrap {
+    width: 100%;
+    padding-inline: clamp(40px, 5vw, 96px);
+  }
+  /* Form-like screens (KYC, payment schedule): one centred, narrow column. */
+  .app-shell--desktop .desk-content > .d-narrow {
+    max-width: 800px;
+  }
+  .app-shell--desktop .d-split > .d-aside {
+    grid-column: 2;
+    grid-row: 1 / span 40;
+    position: sticky;
+    top: 24px;
+    max-height: calc(100dvh - 130px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+}
+
+/*
+ * Desktop: square corners everywhere, and larger body text. Screens size their
+ * text with fixed px classes made for a phone, so each small size is bumped here
+ * (headings, 20px and up, are already set for desktop).
+ */
+.app-shell--desktop *,
+.app-shell--desktop *::before,
+.app-shell--desktop *::after {
+  border-radius: 0 !important;
+}
+
+.app-shell--desktop .text-\[9\.5px\] { font-size: 12px; }
+.app-shell--desktop .text-\[10px\] { font-size: 12px; }
+.app-shell--desktop .text-\[10\.5px\] { font-size: 12.5px; }
+.app-shell--desktop .text-\[11px\] { font-size: 13px; }
+.app-shell--desktop .text-\[11\.5px\] { font-size: 13.5px; }
+.app-shell--desktop .text-\[12px\] { font-size: 14px; }
+.app-shell--desktop .text-\[12\.5px\] { font-size: 15px; }
+.app-shell--desktop .text-\[13px\] { font-size: 15px; }
+.app-shell--desktop .text-\[13\.5px\] { font-size: 16px; }
+.app-shell--desktop .text-\[14px\] { font-size: 16px; }
+.app-shell--desktop .text-\[15px\] { font-size: 17px; }
+.app-shell--desktop .text-\[16px\] { font-size: 18px; }
+.app-shell--desktop .text-\[17px\] { font-size: 19px; }
+.app-shell--desktop .text-\[18px\] { font-size: 20px; }
+.app-shell--desktop .text-\[19px\] { font-size: 21px; }

@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useAppRouter as useRouter } from "@/lib/nav";
 import { useSession } from "@/lib/store";
 import { avatar } from "@/lib/avatar/controller";
 import { projectBriefing, projectReturnLine } from "@/lib/avatar/screen-lines";
@@ -59,8 +60,9 @@ export default function ProjectDetail() {
   const amenities = lookupKnowledge("amenities", project.id);
 
   return (
-    <div>
+    <div className="d-split desk:pt-10">
       {/* Hero: the films inline, narrated by the Property Advisor, else the photo or a generated skyline. */}
+      <div className="desk:overflow-hidden desk:rounded-3xl">
       {films.length > 0 ? (
         <FilmStrip
           key={project.id}
@@ -75,7 +77,7 @@ export default function ProjectDetail() {
       ) : (
         <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-[#555555] to-[#222222] text-site-ink">
           {project.image ? (
-            <Image src={project.image} alt={project.name} fill sizes="428px" className="object-cover" priority />
+            <Image src={project.image} alt={project.name} fill sizes="(min-width: 1024px) 760px, 428px" className="object-cover" priority />
           ) : (
             <>
               <Skyline className="absolute inset-0 h-full w-full" opacity={0.3} />
@@ -84,20 +86,22 @@ export default function ProjectDetail() {
           )}
         </div>
       )}
+      </div>
 
-      <div className="px-4 pb-3 pt-4">
+      <div className="d-aside">
+      <div className="px-4 pb-3 pt-4 desk:px-0 desk:pt-0">
         <div className="flex flex-wrap gap-1.5">
           <Badge tone={soldOut ? "muted" : "verd"}>{soldOut ? availabilityLabel(project) : STATUS_LABEL[project.status]}</Badge>
           {project.illustrative && <Badge tone="gold">Sample pricing</Badge>}
         </div>
-        <h1 className="mt-2 font-display text-[38px] font-medium leading-[1] tracking-tight">{project.name}</h1>
-        <p className="mt-0.5 flex items-center gap-1 text-[13px] text-ink-soft">
+        <h1 className="mt-2 font-display text-[38px] font-medium leading-[1] tracking-tight desk:mt-3 desk:text-[44px]">{project.name}</h1>
+        <p className="mt-0.5 flex items-center gap-1 text-[13px] text-ink-soft desk:mt-2 desk:text-[15px]">
           <PinIcon className="h-3.5 w-3.5" />
           {project.location}
         </p>
       </div>
 
-      <div className="mx-4 overflow-hidden rounded-2xl border border-gold/30 bg-card shadow-[0_12px_30px_-20px_rgb(0_0_0/0.18)]">
+      <div className="mx-4 overflow-hidden rounded-2xl border border-gold/30 bg-card shadow-[0_12px_30px_-20px_rgb(0_0_0/0.18)] desk:mx-0 desk:mt-2">
         <div className="flex items-end justify-between gap-3 bg-gold-soft px-4 py-3.5">
           <div className="min-w-0">
             <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-soft">{soldOut ? "Was from" : "Starting from"}</div>
@@ -114,7 +118,31 @@ export default function ProjectDetail() {
         </div>
       </div>
 
-      <nav aria-label="Jump to a section" className="mt-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]">
+      {/* Desktop: the actions live beside the page, so they never scroll away. */}
+      <div className="mt-5 hidden flex-col gap-3 desk:flex">
+        {soldOut ? (
+          <Button onClick={() => router.push("/units")}>More projects</Button>
+        ) : (
+          <>
+            <Button onClick={() => router.push(`/units/${project.id}/map`)}>View the unit map</Button>
+            <Button variant="secondary" onClick={() => router.push("/money/calculator")}>
+              Payment plan calculator
+            </Button>
+          </>
+        )}
+        <Button
+          variant="secondary"
+          onClick={() => {
+            avatar.bargeIn();
+            void requestHuman();
+          }}
+        >
+          Ask an advisor
+        </Button>
+      </div>
+      </div>
+
+      <nav aria-label="Jump to a section" className="mt-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] desk:mt-8 desk:flex-wrap desk:overflow-visible desk:px-0">
         {JUMPS.map((j) => (
           <button
             key={j.id}
@@ -234,7 +262,7 @@ export default function ProjectDetail() {
                 loading="lazy"
                 allowFullScreen
                 referrerPolicy="strict-origin-when-cross-origin"
-                className="block h-64 w-full border-0"
+                className="block h-64 w-full border-0 desk:h-96"
               />
               <a
                 href={SITE_MAPS[project.id].link}
@@ -252,7 +280,7 @@ export default function ProjectDetail() {
       )}
 
       <Section id="features" title="What you get">
-        <ul className="grid gap-2">
+        <ul className="grid gap-2 desk:grid-cols-2 desk:gap-3 deskxl:grid-cols-3">
           {project.features.map((f) => (
             <li key={f} className="flex items-start gap-3 rounded-2xl border border-line bg-card px-3.5 py-3 text-[13.5px] leading-snug shadow-[0_10px_28px_-24px_rgb(0_0_0/0.25)]">
               <Check className="mt-px" />
@@ -298,7 +326,7 @@ export default function ProjectDetail() {
 
       {PROJECTS.length > 1 && (
         <Section title="Other projects you can book">
-          <div className="flex flex-col gap-2.5">
+          <div className="flex flex-col gap-2.5 desk:grid desk:grid-cols-2 desk:gap-3">
             {PROJECTS.filter((p) => p.id !== project.id && p.availability === "available").slice(0, 6).map((p) => (
               <button
                 key={p.id}
@@ -338,10 +366,10 @@ export default function ProjectDetail() {
       </Disclosure>
 
       {/* Room for the avatar tile above the pinned buttons at the end of the page. */}
-      <div className="h-28" />
+      <div className="h-28 desk:hidden" />
 
       {/* Pinned to the bottom of the screen while scrolling; the avatar tile floats just above it. */}
-      <div className="sticky bottom-0 z-10 grid grid-cols-2 gap-2 border-t border-gold/10 bg-paper/80 px-4 py-3 backdrop-blur-xl">
+      <div className="sticky bottom-0 z-10 grid grid-cols-2 gap-2 border-t border-gold/10 bg-paper/80 px-4 py-3 backdrop-blur-xl desk:hidden">
         {soldOut ? <Button onClick={() => router.push("/units")}>More projects</Button> : <Button onClick={() => router.push(`/units/${project.id}/map`)}>Unit map</Button>}
         <Button variant="secondary" onClick={() => {
             avatar.bargeIn();

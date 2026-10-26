@@ -5,7 +5,7 @@
 // 20% down payment then 1% a month over 80 months at 0% interest.
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useAppRouter as useRouter } from "@/lib/nav";
 import { useSession } from "@/lib/store";
 import { useAvatar } from "@/lib/avatar/controller";
 import { calculatePayment } from "@/lib/agent/tools";
@@ -41,15 +41,35 @@ function CalculatorFor({ unit }: { unit: Unit }) {
     { when: `On completion · ${project.handover}`, what: "Balance", amount: r.balance_on_completion },
   ];
 
+  // The same two actions twice: pinned to the bottom on a phone, beside the result on desktop.
+  const actions = (
+    <>
+        <Button variant="secondary" onClick={() => void send("Can you explain how the payment plan works?")}>
+          Ask about the plan
+        </Button>
+        <Button
+          disabled={unit.status !== "available" && booking?.unit_id !== unit.id}
+          onClick={() => {
+            if (booking?.unit_id === unit.id) return router.push("/booking");
+            if (!dismissed) return void send(`I want to book unit ${unit.unitNo}.`);
+            if (useSession.getState().bookUnit(unit.id)) router.push("/booking");
+          }}
+        >
+          {booking?.unit_id === unit.id ? "Go to booking" : "Book this unit"}
+        </Button>
+    </>
+  );
+
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="d-split flex min-h-full flex-col desk:pt-2">
+      <div className="d-aside">
       <ScreenTitle
         eyebrow={`Unit ${unit.unitNo} · ${unit.layout} · ${sqft(unit.sizeSqft)}`}
         title="Your payment plan"
         sub="Move the sliders to see what fits."
       />
 
-      <Card className="mx-4 mt-4 overflow-hidden">
+      <Card className="mx-4 mt-4 overflow-hidden desk:mx-0 desk:mt-8">
         <div className="bg-linear-to-br from-[#555555] to-site px-5 py-5 text-site-ink">
           <div className="text-[10.5px] font-semibold uppercase tracking-[0.24em] text-gold">Monthly instalment</div>
           <div className="mt-1.5 font-display text-[46px] font-medium leading-none tracking-tight">{aed(r.monthly_instalment)}</div>
@@ -63,6 +83,8 @@ function CalculatorFor({ unit }: { unit: Unit }) {
           <Out label="On completion" value={aedShort(r.balance_on_completion)} />
         </div>
       </Card>
+      <div className="mt-6 hidden flex-col gap-3 desk:flex">{actions}</div>
+      </div>
 
       <Section>
         <Card className="space-y-4 px-4 py-4">
@@ -99,7 +121,7 @@ function CalculatorFor({ unit }: { unit: Unit }) {
         final price and schedule with the Danube sales team.
       </Disclosure>
 
-      <StickyBar className="grid grid-cols-2">
+      <StickyBar className="grid grid-cols-2 desk:hidden">
         <Button variant="secondary" onClick={() => void send("Can you explain how the payment plan works?")}>
           Ask about the plan
         </Button>

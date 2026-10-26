@@ -14,7 +14,19 @@ import { SvgAvatar } from "@/components/SvgAvatar";
 import { useSession } from "@/lib/store";
 import { CloseIcon, ExpandIcon } from "@/components/icons";
 
-export function AvatarStage({ pip, lift = false, onExpand }: { pip: boolean; /** Sit higher, clear of a pinned bar at the bottom. */ lift?: boolean; onExpand: () => void }) {
+export function AvatarStage({
+  pip,
+  panel = false,
+  lift = false,
+  onExpand,
+}: {
+  pip: boolean;
+  /** Desktop widget: fill the avatar slot, with its own status dot and close button. */
+  panel?: boolean;
+  /** Sit higher, clear of a pinned bar at the bottom. */
+  lift?: boolean;
+  onExpand: () => void;
+}) {
   const { mode, status, speaking, listening, dismissed } = useAvatar();
   // The welcome questions run with the avatar; the close button appears after them.
   const onboarding = useSession((s) => s.onboarding);
@@ -30,7 +42,7 @@ export function AvatarStage({ pip, lift = false, onExpand }: { pip: boolean; /**
 
   // Closed: a small circle on the right; tap it to bring the advisor back.
   if (dismissed) {
-    if (!pip) return null;
+    if (!pip) return null; // the desktop panel shows its own "bring back" button
     return (
       <button
         onClick={() => avatar.restore()}
@@ -62,6 +74,20 @@ export function AvatarStage({ pip, lift = false, onExpand }: { pip: boolean; /**
         playsInline
         className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${live ? "opacity-100" : "opacity-0"}`}
       />
+      {panel && (
+        <>
+          <span className={`absolute bottom-4 left-3 h-2.5 w-2.5 rounded-full ring-2 ring-black/30 ${speaking ? "animate-pulse bg-[#BDA588]" : listening ? "bg-sky-300" : live ? "bg-emerald-400" : "bg-slate-300"}`} />
+          {!onboarding && (
+            <button
+              onClick={() => avatar.dismiss()}
+              aria-label="Switch off the Property Advisor"
+              className="absolute left-3 top-3 rounded-full bg-black/55 p-1.5 text-white backdrop-blur"
+            >
+              <CloseIcon className="h-4 w-4" />
+            </button>
+          )}
+        </>
+      )}
       {pip && (
         <>
           <span className={`absolute bottom-1.5 left-1.5 h-2 w-2 rounded-full ring-2 ring-black/30 ${speaking ? "animate-pulse bg-[#BDA588]" : listening ? "bg-sky-300" : live ? "bg-emerald-400" : "bg-slate-300"}`} />

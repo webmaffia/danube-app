@@ -4,8 +4,8 @@
 // in localStorage, so instead of sending them through registration again,
 // this lands them back on the screen they last had open.
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { AppLink as Link } from "@/lib/nav";
+import { useAppRouter as useRouter } from "@/lib/nav";
 import { useEffect, useState } from "react";
 import { useSession } from "@/lib/store";
 import { routeFor } from "@/lib/journey";

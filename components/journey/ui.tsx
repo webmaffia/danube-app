@@ -1,15 +1,15 @@
 // Shared building blocks for the journey screens.
 
-import Link from "next/link";
+import { AppLink as Link } from "@/lib/nav";
 import type { ReactNode } from "react";
 
 export function ScreenTitle({ eyebrow, title, sub, right }: { eyebrow?: string; title: string; sub?: ReactNode; right?: ReactNode }) {
   return (
-    <div className="flex items-start justify-between gap-3 px-4 pt-4">
+    <div className="flex items-start justify-between gap-3 px-4 pt-4 desk:px-0 desk:pt-12">
       <div className="min-w-0">
         {eyebrow && <p className="text-[10.5px] font-semibold uppercase tracking-[0.24em] text-gold">{eyebrow}</p>}
-        <h1 className="mt-1 font-display text-[30px] font-medium leading-[1.05] tracking-tight">{title}</h1>
-        {sub && <p className="mt-1 text-[13.5px] leading-snug text-ink-soft">{sub}</p>}
+        <h1 className="mt-1 font-display text-[30px] font-medium leading-[1.05] tracking-tight desk:mt-2 desk:text-[52px]">{title}</h1>
+        {sub && <p className="mt-1 text-[13.5px] leading-snug text-ink-soft desk:mt-3 desk:text-[17px]!">{sub}</p>}
       </div>
       {right}
     </div>
@@ -18,11 +18,11 @@ export function ScreenTitle({ eyebrow, title, sub, right }: { eyebrow?: string; 
 
 export function Section({ title, children, className = "", id }: { title?: string; children: ReactNode; className?: string; id?: string }) {
   return (
-    <section id={id} className={`scroll-mt-3 px-4 pt-7 ${className}`}>
+    <section id={id} className={`scroll-mt-3 px-4 pt-7 desk:px-0 desk:pt-14 ${className}`}>
       {title && (
-        <h2 className="mb-4 flex items-center gap-3 font-display text-[20px] font-semibold uppercase leading-none tracking-[0.12em] text-ink">
-          <span className="h-px flex-1 bg-gold/60" />
-          <span className="text-center">{title}</span>
+        <h2 className="mb-4 flex items-center gap-3 font-display text-[20px] font-semibold uppercase leading-none tracking-[0.12em] text-ink desk:mb-6 desk:text-[26px]">
+          <span className="h-px flex-1 bg-gold/60 desk:hidden" />
+          <span className="text-center desk:text-left">{title}</span>
           <span className="h-px flex-1 bg-gold/60" />
         </h2>
       )}
@@ -102,7 +102,9 @@ export function Button({
  * sits at the bottom when the content is short.
  */
 export function StickyBar({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={`sticky bottom-0 z-10 mt-auto flex shrink-0 flex-col gap-2 border-t border-line bg-paper/90 px-4 pb-3 pt-4 backdrop-blur-xl ${className}`}>{children}</div>;
+  return <div
+      className={`sticky bottom-0 z-10 mt-auto flex shrink-0 flex-col gap-2 border-t border-line bg-paper/90 px-4 pb-3 pt-4 backdrop-blur-xl desk:static desk:mt-10 desk:max-w-[520px] desk:border-0 desk:bg-transparent desk:px-0 desk:pb-0 desk:pt-0 desk:backdrop-blur-none ${className}`}
+    >{children}</div>;
 }
 
 export function Badge({ children, tone = "verd" }: { children: ReactNode; tone?: "verd" | "gold" | "muted" }) {
@@ -112,12 +114,12 @@ export function Badge({ children, tone = "verd" }: { children: ReactNode; tone?:
 
 /** Small print that must stay visible: risk, in-principle, sandbox. */
 export function Disclosure({ children }: { children: ReactNode }) {
-  return <p className="mx-4 mt-6 rounded-xl border border-dashed border-line px-3 py-2.5 text-[11.5px] leading-relaxed text-ink-soft">{children}</p>;
+  return <p className="mx-4 mt-6 rounded-xl border border-dashed desk:mx-0 desk:mt-14 border-line px-3 py-2.5 text-[11.5px] leading-relaxed text-ink-soft">{children}</p>;
 }
 
 export function Steps({ current, total }: { current: number; total: number }) {
   return (
-    <div className="flex gap-1.5 px-4 pt-3" aria-label={`Step ${current} of ${total}`}>
+    <div className="flex gap-1.5 px-4 pt-3 desk:px-0 desk:pt-6" aria-label={`Step ${current} of ${total}`}>
       {Array.from({ length: total }, (_, i) => (
         <span key={i} className={`h-1 flex-1 rounded-full ${i < current ? "bg-gold" : "bg-line"}`} />
       ))}

@@ -4,7 +4,7 @@
 // localStorage, so this reads their stored journey back to them as a checklist
 // and offers to pick up on the screen they last had open.
 
-import { useRouter } from "next/navigation";
+import { useAppRouter as useRouter } from "@/lib/nav";
 import { useEffect, useState } from "react";
 import { useSession } from "@/lib/store";
 import { routeFor } from "@/lib/journey";
@@ -64,6 +64,7 @@ export function WelcomeBack() {
       className="absolute inset-0 z-30 flex flex-col justify-center px-6 py-8 text-ink"
       style={{ background: "var(--brand-gradient), var(--paper)" }}
     >
+      <div className="mx-auto flex w-full max-w-[440px] flex-col">
       <div className="mb-6 flex justify-center">
         <Logo className="w-48" />
       </div>
@@ -99,6 +100,7 @@ export function WelcomeBack() {
       >
         Start over instead
       </button>
+      </div>
     </div>
   );
 }

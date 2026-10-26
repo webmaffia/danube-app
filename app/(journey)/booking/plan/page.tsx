@@ -6,7 +6,7 @@
 // unlocks only when the one before it is done.
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useAppRouter as useRouter } from "@/lib/nav";
 import { nextPlanStep, PLAN_STEPS, useSession, type PlanStep } from "@/lib/store";
 import { dateIn, aed, scheduleSteps } from "@/lib/journey";
 import { getProject } from "@/lib/inventory";
@@ -24,7 +24,7 @@ export default function PlanPage() {
 
   if (!booking || booking.status !== "paid") {
     return (
-      <div className="flex min-h-full flex-col">
+      <div className="d-narrow flex min-h-full flex-col">
         <ScreenTitle eyebrow="Payment schedule" title="Pay the token first" sub="The payment schedule opens once your token is paid and KYC is done." />
         <StickyBar>
           <Button onClick={() => router.push("/booking")}>Go to booking</Button>
@@ -34,7 +34,7 @@ export default function PlanPage() {
   }
   if (!kyc) {
     return (
-      <div className="flex min-h-full flex-col">
+      <div className="d-narrow flex min-h-full flex-col">
         <ScreenTitle eyebrow="Payment schedule" title="Complete KYC first" sub="The payment schedule opens once your KYC is verified." />
         <StickyBar>
           <Button onClick={() => router.push("/booking/kyc")}>Start KYC</Button>
@@ -81,7 +81,7 @@ export default function PlanPage() {
   const stepDone = (step: "spa" | "oqood", event: string, detail: string) => finish(step, event, detail);
 
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="d-narrow flex min-h-full flex-col">
       <ScreenTitle
         eyebrow={`${booking.unit_no} · ${booking.project_name}`}
         title={current ? META[current].title : "Booking complete"}
