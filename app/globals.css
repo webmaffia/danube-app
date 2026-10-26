@@ -304,6 +304,11 @@ body {
   border-radius: 0 !important;
 }
 
+/* The loading ring stays a circle. */
+.app-shell--desktop .keep-round {
+  border-radius: 9999px !important;
+}
+
 .app-shell--desktop .text-\[9\.5px\] { font-size: 12px; }
 .app-shell--desktop .text-\[10px\] { font-size: 12px; }
 .app-shell--desktop .text-\[10\.5px\] { font-size: 12.5px; }
